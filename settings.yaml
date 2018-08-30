@@ -21,7 +21,12 @@ Bitcoin:
     MinFeeValue:
         settings-key: BitcoinApi-MinFeeValue
     MaxFeeValue:
-        settings-key: BitcoinApi-MaxFeeValue
+        settings-key: BitcoinApi-MaxFeeValue    
+AssetsServiceClient: 
+    ServiceUrl: 
+        settings-key: AssetsServiceUrl         
+    ExpirationPeriod: 
+        settings-key: AssetsServiceExpirationPeriod        
 
 MonitoringServiceClient:
     MonitoringServiceUrl:
