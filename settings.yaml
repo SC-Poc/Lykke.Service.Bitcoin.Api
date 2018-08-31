@@ -14,14 +14,28 @@ Bitcoin:
         settings-key: BitcoinApi-NinjaApiUrl
     MinConfirmationsToDetectOperation:
         settings-key: BitcoinApi-MinConfirmationsToDetectOperation
+        types:
+            - Optional
     SpentOutputsExpirationDays:
         settings-key: BitcoinApi-SpentOutputsExpirationDays
+        types:
+            - Optional
     FeePerByte:
         settings-key: BitcoinApi-FeePerByte
-    MinFeeValue:
-        settings-key: BitcoinApi-MinFeeValue
-    MaxFeeValue:
-        settings-key: BitcoinApi-MaxFeeValue    
+        types:
+            - Optional 
+    MaxFeePerByte:
+        settings-key: BitcoinApi-MaxFeePerByte
+        types:
+            - Optional
+    MinFeePerByte:
+        settings-key: BitcoinApi-MinFeePerByte
+        types:
+            - Optional
+    FeeType:
+        settings-key: BitcoinApi-FeeType    
+        types:
+            - Optional
 AssetsServiceClient: 
     ServiceUrl: 
         settings-key: AssetsServiceUrl         
