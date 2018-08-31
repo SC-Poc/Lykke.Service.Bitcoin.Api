@@ -28,7 +28,7 @@ namespace Lykke.Job.Bitcoin.Functions
             _log = logFactory.CreateLog(this);
         }
 
-        [TimerTrigger("00:10:00")]
+        [TimerTrigger("00:05:00")]
         public async Task UpdateBalances()
         {
             string continuation = null;

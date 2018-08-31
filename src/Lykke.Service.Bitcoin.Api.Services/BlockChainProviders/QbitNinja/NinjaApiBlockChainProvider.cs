@@ -43,7 +43,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
         public async Task<int> GetTxConfirmationCountAsync(string txHash)
         {
             var tx = await _ninjaClient.GetTransaction(uint256.Parse(txHash));
-            return tx.Block.Confirmations;
+            return tx.Block?.Confirmations ?? 0;
         }
 
 
