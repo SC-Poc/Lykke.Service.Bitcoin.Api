@@ -107,7 +107,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
         private async Task<IList<ICoin>> GetAllUnspentOutputs(string address, int minConfirmationCount)
         {
             var response = await _ninjaClient.GetBalance(_addressValidator.GetBitcoinAddress(address), true);
-            return response.Operations.Where(o => o.Confirmations > minConfirmationCount)
+            return response.Operations.Where(o => o.Confirmations >= minConfirmationCount)
                 .SelectMany(o => o.ReceivedCoins).ToList();
         }
     }
