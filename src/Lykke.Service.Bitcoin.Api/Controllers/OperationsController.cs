@@ -5,6 +5,7 @@ using Common;
 using Lykke.Common.Api.Contract.Responses;
 using Lykke.Service.Bitcoin.Api.Core.Constants;
 using Lykke.Service.Bitcoin.Api.Core.Domain.ObservableOperation;
+using Lykke.Service.Bitcoin.Api.Core.Domain.Operation;
 using Lykke.Service.Bitcoin.Api.Core.Services;
 using Lykke.Service.Bitcoin.Api.Core.Services.Address;
 using Lykke.Service.Bitcoin.Api.Core.Services.Broadcast;
@@ -24,25 +25,27 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         private readonly IBroadcastService _broadcastService;
         private readonly Network _network;
         private readonly IObservableOperationService _observableOperationService;
+        private readonly IOperationEventRepository _operationEventRepository;
         private readonly IOperationService _operationService;
 
 
         public OperationsController(IOperationService operationService,
             IAddressValidator addressValidator,
             IBroadcastService broadcastService,
-            IObservableOperationService observableOperationService, Network network)
+            IObservableOperationService observableOperationService, IOperationEventRepository operationEventRepository, Network network)
         {
             _operationService = operationService;
             _addressValidator = addressValidator;
             _broadcastService = broadcastService;
             _observableOperationService = observableOperationService;
+            _operationEventRepository = operationEventRepository;
             _network = network;
         }
 
         [HttpPost("api/transactions/single")]
         [ProducesResponseType(typeof(BuildTransactionResponse), 200)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
-        public async Task<BuildTransactionResponse> BuildSingle([FromBody] BuildSingleTransactionRequest request)
+        public async Task<IActionResult> BuildSingle([FromBody] BuildSingleTransactionRequest request)
         {
             if (request == null) throw new BusinessException("Unable deserialize request", ErrorCode.BadInputParameter);
 
@@ -76,22 +79,25 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
                 fromAddressPubkey = _addressValidator.GetPubkey(pubKeyString);
             }
 
+            if (await _operationEventRepository.ExistAsync(request.OperationId, OperationEventType.Broadcasted))            
+                return Conflict();            
+
             var tx = await _operationService.GetOrBuildTransferTransactionAsync(request.OperationId, fromBitcoinAddress,
                 fromAddressPubkey,
                 toBitcoinAddress,
                 request.AssetId, new Money(amountSatoshi), request.IncludeFee);
 
 
-            return new BuildTransactionResponse
+            return Ok(new BuildTransactionResponse
             {
                 TransactionContext = tx.ToJson(_network)
-            };
+            });
         }
 
         [HttpPost("api/transactions/broadcast")]
         [SwaggerOperation(nameof(BroadcastTransaction))]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
-        [ProducesResponseType((int) HttpStatusCode.NoContent)]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NoContent)]
         [ProducesResponseType(400)]
         [ProducesResponseType(409)]
         public async Task<IActionResult> BroadcastTransaction([FromBody] BroadcastTransactionRequest request)
@@ -108,7 +114,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
             }
             catch (BusinessException e) when (e.Code == ErrorCode.OperationNotFound)
             {
-                return new StatusCodeResult((int) HttpStatusCode.NoContent);
+                return new StatusCodeResult((int)HttpStatusCode.NoContent);
             }
 
             return Ok();
@@ -116,8 +122,8 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
 
         [HttpGet("api/transactions/broadcast/single/{operationId}")]
         [SwaggerOperation(nameof(GetObservableSingleOperation))]
-        [ProducesResponseType(typeof(BroadcastedSingleTransactionResponse), (int) HttpStatusCode.OK)]
-        [ProducesResponseType((int) HttpStatusCode.NoContent)]
+        [ProducesResponseType(typeof(BroadcastedSingleTransactionResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NoContent)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> GetObservableSingleOperation(Guid operationId)
         {
@@ -127,7 +133,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
 
             var result = await _observableOperationService.GetByIdAsync(operationId);
 
-            if (result == null) return new StatusCodeResult((int) HttpStatusCode.NoContent);
+            if (result == null) return new StatusCodeResult((int)HttpStatusCode.NoContent);
 
             BroadcastedTransactionState MapState(BroadcastStatus status)
             {
@@ -159,7 +165,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
 
         [HttpDelete("api/transactions/broadcast/{operationId}")]
         [SwaggerOperation(nameof(RemoveObservableOperation))]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> RemoveObservableOperation(Guid operationId)
         {
