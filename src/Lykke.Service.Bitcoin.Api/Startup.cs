@@ -2,6 +2,7 @@
 using JetBrains.Annotations;
 using Lykke.Logs.Loggers.LykkeSlack;
 using Lykke.Sdk;
+using Lykke.Service.Bitcoin.Api.Middleware;
 using Lykke.Service.Bitcoin.Api.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,7 +44,11 @@ namespace Lykke.Service.Bitcoin.Api
         [UsedImplicitly]
         public void Configure(IApplicationBuilder app)
         {
-            app.UseLykkeConfiguration(options => { options.SwaggerOptions = _swaggerOptions; });
+            app.UseLykkeConfiguration(options =>
+            {
+                options.SwaggerOptions = _swaggerOptions;
+                options.WithMiddleware = builder => builder.UseCustomErrorHandligMiddleware();
+            });
         }
     }
 }

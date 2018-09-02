@@ -3,6 +3,7 @@ using System.Net;
 using System.Threading.Tasks;
 using Common;
 using Lykke.Common.Api.Contract.Responses;
+using Lykke.Common.ApiLibrary.Exceptions;
 using Lykke.Service.Bitcoin.Api.Core.Constants;
 using Lykke.Service.Bitcoin.Api.Core.Domain.ObservableOperation;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Operation;
@@ -47,27 +48,26 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> BuildSingle([FromBody] BuildSingleTransactionRequest request)
         {
-            if (request == null) throw new BusinessException("Unable deserialize request", ErrorCode.BadInputParameter);
+            if (request == null) throw new ValidationApiException("Unable deserialize request");
 
             var amountSatoshi = MoneyConversionHelper.SatoshiFromContract(request.Amount);
 
             if (amountSatoshi <= 0)
-                throw new BusinessException($"Amount can't be less or equal to zero: {amountSatoshi}",
-                    ErrorCode.BadInputParameter);
+                throw new ValidationApiException($"Amount can't be less or equal to zero: {amountSatoshi}");
 
             if (request.AssetId != Constants.Assets.Bitcoin.AssetId)
-                throw new BusinessException("Invalid assetId", ErrorCode.BadInputParameter);
+                throw new ValidationApiException("Invalid assetId");
 
             var toBitcoinAddress = _addressValidator.GetBitcoinAddress(request.ToAddress);
             if (toBitcoinAddress == null)
-                throw new BusinessException("Invalid ToAddress ", ErrorCode.BadInputParameter);
+                throw new ValidationApiException("Invalid ToAddress ");
 
             var fromBitcoinAddress = _addressValidator.GetBitcoinAddress(request.FromAddress);
             if (fromBitcoinAddress == null)
-                throw new BusinessException("Invalid FromAddress", ErrorCode.BadInputParameter);
+                throw new ValidationApiException("Invalid FromAddress");
 
             if (request.OperationId == Guid.Empty)
-                throw new BusinessException("Invalid operation id (GUID)", ErrorCode.BadInputParameter);
+                throw new ValidationApiException("Invalid operation id (GUID)");
 
             PubKey fromAddressPubkey = null;
             var pubKeyString = request.FromAddressContext?.DeserializeJson<AddressContextContract>()?.PubKey;
@@ -75,12 +75,12 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
             if (pubKeyString != null)
             {
                 if (!_addressValidator.IsPubkeyValid(pubKeyString))
-                    throw new BusinessException("Invalid pubkey string", ErrorCode.BadInputParameter);
+                    throw new ValidationApiException("Invalid pubkey string");
                 fromAddressPubkey = _addressValidator.GetPubkey(pubKeyString);
             }
 
-            if (await _operationEventRepository.ExistAsync(request.OperationId, OperationEventType.Broadcasted))            
-                return Conflict();            
+            if (await _operationEventRepository.ExistAsync(request.OperationId, OperationEventType.Broadcasted))
+                return Conflict();
 
             var tx = await _operationService.GetOrBuildTransferTransactionAsync(request.OperationId, fromBitcoinAddress,
                 fromAddressPubkey,
@@ -102,7 +102,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         [ProducesResponseType(409)]
         public async Task<IActionResult> BroadcastTransaction([FromBody] BroadcastTransactionRequest request)
         {
-            if (request == null) throw new BusinessException("Unable deserialize request", ErrorCode.BadInputParameter);
+            if (request == null) throw new ValidationApiException("Unable deserialize request");
 
             try
             {
@@ -110,11 +110,11 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
             }
             catch (BusinessException e) when (e.Code == ErrorCode.TransactionAlreadyBroadcasted)
             {
-                return new StatusCodeResult(409);
+                return Conflict();
             }
             catch (BusinessException e) when (e.Code == ErrorCode.OperationNotFound)
             {
-                return new StatusCodeResult((int)HttpStatusCode.NoContent);
+                return NoContent();
             }
 
             return Ok();
@@ -128,13 +128,12 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         public async Task<IActionResult> GetObservableSingleOperation(Guid operationId)
         {
             if (operationId == Guid.Empty)
-                return BadRequest(ErrorResponse.Create("Invalid parameter")
-                    .AddModelError(nameof(operationId), "Must be valid guid"));
+                throw new ValidationApiException("OperationId must be valid guid");
 
             var result = await _observableOperationService.GetByIdAsync(operationId);
 
-            if (result == null) return new StatusCodeResult((int)HttpStatusCode.NoContent);
-
+            if (result == null)
+                return NoContent();
             BroadcastedTransactionState MapState(BroadcastStatus status)
             {
                 switch (status)
@@ -167,13 +166,11 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         [SwaggerOperation(nameof(RemoveObservableOperation))]
         [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
-        public async Task<IActionResult> RemoveObservableOperation(Guid operationId)
+        public async Task RemoveObservableOperation(Guid operationId)
         {
             if (operationId == Guid.Empty)
-                return BadRequest(ErrorResponse.Create("Invalid parameter")
-                    .AddModelError(nameof(operationId), "Must be valid guid"));
+                throw new ValidationApiException("OperationId must be valid guid");
             await _observableOperationService.DeleteOperationsAsync(operationId);
-            return Ok();
         }
     }
 }

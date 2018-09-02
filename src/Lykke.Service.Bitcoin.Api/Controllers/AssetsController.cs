@@ -2,6 +2,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using Lykke.Common.Api.Contract.Responses;
+using Lykke.Common.ApiLibrary.Exceptions;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Asset;
 using Lykke.Service.BlockchainApi.Contract;
 using Lykke.Service.BlockchainApi.Contract.Assets;
@@ -20,19 +21,17 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         }
 
         [SwaggerOperation(nameof(GetPaged))]
-        [ProducesResponseType(typeof(PaginationResponse<AssetResponse>), (int) HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(PaginationResponse<AssetResponse>), (int)HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         [HttpGet("api/assets")]
         public async Task<IActionResult> GetPaged([FromQuery] int take, [FromQuery] string continuation)
         {
             if (take < 1)
-                return BadRequest(ErrorResponse.Create("Invalid parameter")
-                    .AddModelError("take", "Must be positive non zero integer"));
+                throw new ValidationApiException($"{nameof(take)} must be positive non zero integer");
 
             var skip = 0;
             if (!string.IsNullOrEmpty(continuation) && !int.TryParse(continuation, out skip))
-                return BadRequest(ErrorResponse.Create("Invalid parameter")
-                    .AddModelError("continuation", "Must be valid continuation token"));
+                throw new ValidationApiException($"{nameof(continuation)} must be valid continuation token");
 
             var paginationResult = await _assetRepository.GetPagedAsync(take, skip);
 
@@ -46,8 +45,8 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         }
 
         [SwaggerOperation(nameof(GetById))]
-        [ProducesResponseType(typeof(AssetResponse), (int) HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(AssetResponse), (int) HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(AssetResponse), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(AssetResponse), (int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         [HttpGet("api/assets/{assetId}")]
         public async Task<IActionResult> GetById(string assetId)
