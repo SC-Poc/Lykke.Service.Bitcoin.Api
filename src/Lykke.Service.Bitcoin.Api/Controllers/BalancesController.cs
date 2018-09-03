@@ -30,7 +30,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
 
         [HttpPost("api/balances/{address}/observation")]
         [SwaggerOperation(nameof(Subscribe))]
-        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         [ProducesResponseType(typeof(ErrorResponse), 409)]
         public async Task<IActionResult> Subscribe(string address)
@@ -52,7 +52,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
 
         [HttpDelete("api/balances/{address}/observation")]
         [SwaggerOperation(nameof(Unsubscribe))]
-        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         [ProducesResponseType(typeof(ErrorResponse), 204)]
         public async Task<IActionResult> Unsubscribe(string address)
@@ -66,7 +66,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
             }
             catch (BusinessException e) when (e.Code == ErrorCode.EntityNotExist)
             {
-                return StatusCode((int)HttpStatusCode.NoContent);
+                return StatusCode((int) HttpStatusCode.NoContent);
             }
 
             return Ok();
@@ -74,13 +74,13 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
 
         [HttpGet("api/balances/")]
         [SwaggerOperation(nameof(GetBalances))]
-        [ProducesResponseType(typeof(PaginationResponse<WalletBalanceContract>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(PaginationResponse<WalletBalanceContract>), (int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> GetBalances([FromQuery] int take, [FromQuery] string continuation)
         {
             if (take < 1)
                 throw new ValidationApiException($"{nameof(take)} must be positive non zero integer");
-            
+
             if (!string.IsNullOrEmpty(continuation))
                 try
                 {
@@ -88,7 +88,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
                 }
                 catch (JsonReaderException)
                 {
-                    throw new ValidationApiException($"{nameof(continuation)} must be valid continuation token");                    
+                    throw new ValidationApiException($"{nameof(continuation)} must be valid continuation token");
                 }
 
             var padedResult = await _balanceService.GetBalancesAsync(take, continuation);

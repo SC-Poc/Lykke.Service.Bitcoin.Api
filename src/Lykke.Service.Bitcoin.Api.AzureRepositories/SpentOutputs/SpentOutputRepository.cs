@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using AzureStorage;
 using AzureStorage.Tables;
 using Lykke.Common.Log;
-using Lykke.Service.Bitcoin.Api.Core.Domain;
+using Lykke.Service.Bitcoin.Api.Core.Domain.Outputs;
 using Lykke.Service.Bitcoin.Api.Core.Services.TransactionOutputs;
 using Lykke.SettingsReader;
 

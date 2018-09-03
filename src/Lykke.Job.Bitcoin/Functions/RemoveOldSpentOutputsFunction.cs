@@ -2,8 +2,7 @@
 using System.Threading.Tasks;
 using Lykke.Job.Bitcoin.Settings.ServiceSettings;
 using Lykke.JobTriggers.Triggers.Attributes;
-using Lykke.Service.Bitcoin.Api.Core.Domain;
-using Lykke.Service.Bitcoin.Api.Services.TransactionOutputs;
+using Lykke.Service.Bitcoin.Api.Core.Domain.Outputs;
 
 namespace Lykke.Job.Bitcoin.Functions
 {

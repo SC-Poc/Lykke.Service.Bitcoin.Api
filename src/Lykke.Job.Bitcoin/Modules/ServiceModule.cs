@@ -13,7 +13,6 @@ using Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja;
 using Lykke.Service.Bitcoin.Api.Services.Fee;
 using Lykke.Service.Bitcoin.Api.Services.ObservableOperation;
 using Lykke.Service.Bitcoin.Api.Services.Operations;
-using Lykke.Service.Bitcoin.Api.Services.TransactionOutputs;
 using Lykke.Service.Bitcoin.Api.Services.Wallet;
 using Lykke.SettingsReader;
 using NBitcoin;

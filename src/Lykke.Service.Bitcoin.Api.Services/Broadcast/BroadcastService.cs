@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using Lykke.Common.Log;
-using Lykke.Service.Bitcoin.Api.Core.Domain;
 using Lykke.Service.Bitcoin.Api.Core.Domain.ObservableOperation;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Operation;
+using Lykke.Service.Bitcoin.Api.Core.Domain.Outputs;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Transactions;
 using Lykke.Service.Bitcoin.Api.Core.Services.BlockChainReaders;
 using Lykke.Service.Bitcoin.Api.Core.Services.Broadcast;
@@ -25,6 +24,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.Broadcast
         private readonly IOperationMetaRepository _operationMetaRepository;
         private readonly ISpentOutputRepository _spentOutputRepository;
         private readonly ITransactionBlobStorage _transactionBlobStorage;
+        private readonly ITransactionOutputsService _transactionOutputsService;
         private readonly IUnconfirmedTransactionRepository _unconfirmedTransactionRepository;
 
         public BroadcastService(IBlockChainProvider blockChainProvider,
@@ -34,6 +34,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.Broadcast
             IOperationEventRepository operationEventRepository,
             IObservableOperationRepository observableOperationRepository,
             ITransactionBlobStorage transactionBlobStorage,
+            ITransactionOutputsService transactionOutputsService,
             Network network,
             ISpentOutputRepository spentOutputRepository)
         {
@@ -44,6 +45,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.Broadcast
             _operationEventRepository = operationEventRepository;
             _observableOperationRepository = observableOperationRepository;
             _transactionBlobStorage = transactionBlobStorage;
+            _transactionOutputsService = transactionOutputsService;
             _network = network;
             _spentOutputRepository = spentOutputRepository;
         }
@@ -69,11 +71,10 @@ namespace Lykke.Service.Bitcoin.Api.Services.Broadcast
             await _unconfirmedTransactionRepository.InsertOrReplaceAsync(
                 UnconfirmedTransaction.Create(operationId, hash));
 
+            await _transactionOutputsService.CompleteTxOutputs(operationId, tx);
+
             await _operationEventRepository.InsertIfNotExistAsync(OperationEvent.Create(operationId,
                 OperationEventType.Broadcasted));
-
-            await _spentOutputRepository.InsertSpentOutputsAsync(operationId,
-                tx.Inputs.Select(i => new Output(i.PrevOut)));
         }
 
         public async Task BroadCastTransactionAsync(Guid operationId, string txHex)

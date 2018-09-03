@@ -3,15 +3,16 @@ using AzureStorage.Blob;
 using Lykke.Common.Log;
 using Lykke.Service.Bitcoin.Api.AzureRepositories.Asset;
 using Lykke.Service.Bitcoin.Api.AzureRepositories.Fee;
+using Lykke.Service.Bitcoin.Api.AzureRepositories.InternalOutputs;
 using Lykke.Service.Bitcoin.Api.AzureRepositories.Operations;
 using Lykke.Service.Bitcoin.Api.AzureRepositories.SpentOutputs;
 using Lykke.Service.Bitcoin.Api.AzureRepositories.Transactions;
 using Lykke.Service.Bitcoin.Api.AzureRepositories.Wallet;
-using Lykke.Service.Bitcoin.Api.Core.Domain;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Asset;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Fee;
 using Lykke.Service.Bitcoin.Api.Core.Domain.ObservableOperation;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Operation;
+using Lykke.Service.Bitcoin.Api.Core.Domain.Outputs;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Transactions;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Wallet;
 using Lykke.Service.Bitcoin.Api.Settings;
@@ -69,6 +70,10 @@ namespace Lykke.Service.Bitcoin.Api.Modules
 
             builder.Register(x => SpentOutputRepository.Create(connectionString, x.Resolve<ILogFactory>()))
                 .As<ISpentOutputRepository>()
+                .SingleInstance();
+
+            builder.Register(x => InternalOutputRepository.Create(connectionString, x.Resolve<ILogFactory>()))
+                .As<IInternalOutputRepository>()
                 .SingleInstance();
 
             builder.Register(x => FeeRateRepository.Create(connectionString, x.Resolve<ILogFactory>()))

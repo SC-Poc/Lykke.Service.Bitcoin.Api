@@ -33,7 +33,8 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         public OperationsController(IOperationService operationService,
             IAddressValidator addressValidator,
             IBroadcastService broadcastService,
-            IObservableOperationService observableOperationService, IOperationEventRepository operationEventRepository, Network network)
+            IObservableOperationService observableOperationService, IOperationEventRepository operationEventRepository,
+            Network network)
         {
             _operationService = operationService;
             _addressValidator = addressValidator;
@@ -96,8 +97,8 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
 
         [HttpPost("api/transactions/broadcast")]
         [SwaggerOperation(nameof(BroadcastTransaction))]
-        [ProducesResponseType((int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NoContent)]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.NoContent)]
         [ProducesResponseType(400)]
         [ProducesResponseType(409)]
         public async Task<IActionResult> BroadcastTransaction([FromBody] BroadcastTransactionRequest request)
@@ -122,8 +123,8 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
 
         [HttpGet("api/transactions/broadcast/single/{operationId}")]
         [SwaggerOperation(nameof(GetObservableSingleOperation))]
-        [ProducesResponseType(typeof(BroadcastedSingleTransactionResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.NoContent)]
+        [ProducesResponseType(typeof(BroadcastedSingleTransactionResponse), (int) HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.NoContent)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task<IActionResult> GetObservableSingleOperation(Guid operationId)
         {
@@ -134,6 +135,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
 
             if (result == null)
                 return NoContent();
+
             BroadcastedTransactionState MapState(BroadcastStatus status)
             {
                 switch (status)
@@ -164,7 +166,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
 
         [HttpDelete("api/transactions/broadcast/{operationId}")]
         [SwaggerOperation(nameof(RemoveObservableOperation))]
-        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         public async Task RemoveObservableOperation(Guid operationId)
         {

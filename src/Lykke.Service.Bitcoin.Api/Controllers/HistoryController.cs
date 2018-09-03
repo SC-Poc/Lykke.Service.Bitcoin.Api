@@ -1,10 +1,8 @@
 ﻿using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Lykke.Common.Api.Contract.Responses;
 using Lykke.Common.ApiLibrary.Exceptions;
 using Lykke.Service.Bitcoin.Api.Core.Services.Address;
-using Lykke.Service.Bitcoin.Api.Core.Services.Exceptions;
 using Lykke.Service.Bitcoin.Api.Core.Services.Transactions;
 using Lykke.Service.Bitcoin.Api.Helpers;
 using Lykke.Service.BlockchainApi.Contract.Transactions;
@@ -86,7 +84,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
             [FromQuery] int take)
         {
             if (take <= 0)
-                throw new ValidationApiException($"{nameof(take)} must be greater than zero");            
+                throw new ValidationApiException($"{nameof(take)} must be greater than zero");
 
             ValidateAddress(address);
 

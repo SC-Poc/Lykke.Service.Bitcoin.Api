@@ -4,6 +4,7 @@ using Lykke.Service.Bitcoin.Api.Core.Domain.Operation;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Transactions;
 using Lykke.Service.Bitcoin.Api.Core.Services;
 using Lykke.Service.Bitcoin.Api.Core.Services.Exceptions;
+using Lykke.Service.Bitcoin.Api.Core.Services.TransactionOutputs;
 using Lykke.Service.Bitcoin.Api.Core.Services.Transactions;
 using NBitcoin;
 using NBitcoin.JsonConverters;
@@ -16,13 +17,16 @@ namespace Lykke.Service.Bitcoin.Api.Services.Operations
         private readonly IOperationMetaRepository _operationMetaRepository;
         private readonly ITransactionBlobStorage _transactionBlobStorage;
         private readonly ITransactionBuilderService _transactionBuilder;
+        private readonly ITransactionOutputsService _transactionOutputsService;
 
         public OperationService(ITransactionBuilderService transactionBuilder,
             IOperationMetaRepository operationMetaRepository,
+            ITransactionOutputsService transactionOutputsService,
             ITransactionBlobStorage transactionBlobStorage, Network network)
         {
             _transactionBuilder = transactionBuilder;
             _operationMetaRepository = operationMetaRepository;
+            _transactionOutputsService = transactionOutputsService;
             _transactionBlobStorage = transactionBlobStorage;
             _network = network;
         }
@@ -52,15 +56,18 @@ namespace Lykke.Service.Bitcoin.Api.Services.Operations
                 return await GetExistingTransaction(existingOperation.OperationId, existingOperation.Hash);
             }
 
-            var buildedTransaction =
-                await _transactionBuilder.GetTransferTransactionAsync(fromAddress, fromAddressPubKey, toAddress,
-                    amountToSend, includeFee);
+            var buildedTransaction = await _transactionBuilder.GetTransferTransactionAsync(fromAddress,
+                fromAddressPubKey, toAddress,
+                amountToSend, includeFee);
 
             var buildedTransactionInfo = new BuildedTransactionInfo
             {
                 TransactionHex = buildedTransaction.TransactionData.ToHex(),
                 UsedCoins = buildedTransaction.UsedCoins
             };
+
+            await _transactionOutputsService.AddInternalOutputs(operationId,
+                buildedTransaction.TransactionData.Outputs.AsCoins());
 
             var txHash = buildedTransaction.TransactionData.GetHash().ToString();
 

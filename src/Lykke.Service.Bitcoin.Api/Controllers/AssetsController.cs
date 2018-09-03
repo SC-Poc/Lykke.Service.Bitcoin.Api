@@ -21,7 +21,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         }
 
         [SwaggerOperation(nameof(GetPaged))]
-        [ProducesResponseType(typeof(PaginationResponse<AssetResponse>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(PaginationResponse<AssetResponse>), (int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         [HttpGet("api/assets")]
         public async Task<IActionResult> GetPaged([FromQuery] int take, [FromQuery] string continuation)
@@ -45,8 +45,8 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         }
 
         [SwaggerOperation(nameof(GetById))]
-        [ProducesResponseType(typeof(AssetResponse), (int)HttpStatusCode.OK)]
-        [ProducesResponseType(typeof(AssetResponse), (int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(AssetResponse), (int) HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(AssetResponse), (int) HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
         [HttpGet("api/assets/{assetId}")]
         public async Task<IActionResult> GetById(string assetId)
