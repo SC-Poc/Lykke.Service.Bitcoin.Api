@@ -1,10 +1,11 @@
 ﻿using Common;
+using Lykke.AzureStorage.Tables;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Wallet;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Wallet
 {
-    public class ObservableWalletEntity : TableEntity, IObservableWallet
+    public class ObservableWalletEntity : AzureTableEntity, IObservableWallet
     {
         public string Address { get; set; }
 

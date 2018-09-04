@@ -6,6 +6,7 @@ using Lykke.Service.Bitcoin.Api.Core.Services.Asset;
 using Lykke.Service.Bitcoin.Api.Core.Services.BlockChainReaders;
 using Lykke.Service.Bitcoin.Api.Core.Services.Broadcast;
 using Lykke.Service.Bitcoin.Api.Core.Services.Fee;
+using Lykke.Service.Bitcoin.Api.Core.Services.Operation;
 using Lykke.Service.Bitcoin.Api.Core.Services.TransactionOutputs;
 using Lykke.Service.Bitcoin.Api.Core.Services.Transactions;
 using Lykke.Service.Bitcoin.Api.Services.Address;

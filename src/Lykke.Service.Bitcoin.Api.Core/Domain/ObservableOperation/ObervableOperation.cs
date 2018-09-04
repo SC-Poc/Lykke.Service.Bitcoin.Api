@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Operation;
 
 namespace Lykke.Service.Bitcoin.Api.Core.Domain.ObservableOperation
@@ -7,10 +8,9 @@ namespace Lykke.Service.Bitcoin.Api.Core.Domain.ObservableOperation
     {
         public bool IncludeFee { get; set; }
         public Guid OperationId { get; set; }
-        public string FromAddress { get; set; }
-        public string ToAddress { get; set; }
-        public string AssetId { get; set; }
-        public long AmountSatoshi { get; set; }
+        public OperationInput[] Inputs { get; set; }
+        public OperationOutput[] Outputs { get; set; }        
+        public string AssetId { get; set; }        
         public long FeeSatoshi { get; set; }
         public DateTime Updated { get; set; }
         public BroadcastStatus Status { get; set; }
@@ -23,16 +23,15 @@ namespace Lykke.Service.Bitcoin.Api.Core.Domain.ObservableOperation
             return new ObervableOperation
             {
                 OperationId = operation.OperationId,
-                AmountSatoshi = operation.AmountSatoshi,
+                Inputs = operation.Inputs.ToArray(),
                 AssetId = operation.AssetId,
-                FromAddress = operation.FromAddress,
-                IncludeFee = operation.IncludeFee,
-                ToAddress = operation.ToAddress,
+                Outputs = operation.Outputs.ToArray(),
+                IncludeFee = operation.IncludeFee,                
                 Status = status,
                 TxHash = txHash,
                 Updated = updated ?? DateTime.UtcNow,
                 FeeSatoshi = operation.FeeSatoshi,
-                UpdatedAtBlockHeight = updatedAtBlockHeight
+                UpdatedAtBlockHeight = updatedAtBlockHeight,                
             };
         }
     }

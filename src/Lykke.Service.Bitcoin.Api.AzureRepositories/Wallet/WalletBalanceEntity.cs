@@ -1,11 +1,12 @@
 ﻿using System;
 using Common;
+using Lykke.AzureStorage.Tables;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Wallet;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Wallet
 {
-    public class WalletBalanceEntity : TableEntity, IWalletBalance
+    public class WalletBalanceEntity : AzureTableEntity, IWalletBalance
     {
         public string Address { get; set; }
         public long Balance { get; set; }

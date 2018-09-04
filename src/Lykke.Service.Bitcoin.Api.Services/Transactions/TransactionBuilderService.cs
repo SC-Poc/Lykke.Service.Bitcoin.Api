@@ -1,113 +1,184 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Lykke.Service.Bitcoin.Api.Core.Domain.Operation;
+using Lykke.Service.Bitcoin.Api.Core.Services.Address;
 using Lykke.Service.Bitcoin.Api.Core.Services.Exceptions;
 using Lykke.Service.Bitcoin.Api.Core.Services.Fee;
+using Lykke.Service.Bitcoin.Api.Core.Services.Operation;
 using Lykke.Service.Bitcoin.Api.Core.Services.TransactionOutputs;
 using Lykke.Service.Bitcoin.Api.Core.Services.Transactions;
 using NBitcoin;
 
 namespace Lykke.Service.Bitcoin.Api.Services.Transactions
 {
-    public class BuildedTransaction : IBuildedTransaction
-    {
-        public Transaction TransactionData { get; set; }
-        public Money Fee { get; set; }
-        public Money Amount { get; set; }
-        public IEnumerable<Coin> UsedCoins { get; set; }
-
-        public static BuildedTransaction Create(Transaction transaction, Money fee, Money amount,
-            IEnumerable<Coin> usedCoins)
-        {
-            return new BuildedTransaction
-            {
-                Amount = amount,
-                Fee = fee,
-                TransactionData = transaction,
-                UsedCoins = usedCoins
-            };
-        }
-    }
-
     public class TransactionBuilderService : ITransactionBuilderService
     {
         private readonly IFeeService _feeService;
         private readonly ITransactionOutputsService _transactionOutputsService;
+        private readonly IAddressValidator _addressValidator;
 
         public TransactionBuilderService(ITransactionOutputsService transactionOutputsService,
+            IAddressValidator addressValidator,
             IFeeService feeService)
         {
             _transactionOutputsService = transactionOutputsService;
+            _addressValidator = addressValidator;
             _feeService = feeService;
         }
 
-        public async Task<IBuildedTransaction> GetTransferTransactionAsync(BitcoinAddress source,
-            PubKey fromAddressPubkey,
-            BitcoinAddress destination, Money amount, bool includeFee)
+        private async Task<IList<Coin>> GetUnspentCoins(OperationBitcoinInput input)
         {
+            var coins = (await _transactionOutputsService.GetUnspentOutputsAsync(input.Address.ToString())).ToList();
+            if (input.Redeem != null)
+                coins = coins.Select(o => o.ToScriptCoin(input.Redeem)).Cast<Coin>().ToList();
+            return coins;
+        }
+
+
+        public async Task<IBuiltTransaction> GetManyOutputsTransferTransactionAsync(OperationInput fromAddress,
+            IList<OperationOutput> toAddresses)
+        {
+            var input = fromAddress.ToBitcoinInput(_addressValidator);
+            var outputs = toAddresses.Select(o => o.ToBitcoinOutput(_addressValidator)).ToList();
             var builder = new TransactionBuilder();
 
-            return await TransferOneDirection(builder, source, fromAddressPubkey, amount.Satoshi, destination,
-                includeFee);
-        }
+            foreach (var operationBitcoinOutput in outputs)
+                builder.Send(operationBitcoinOutput.Address, operationBitcoinOutput.Amount);
 
-        private async Task<IBuildedTransaction> TransferOneDirection(TransactionBuilder builder,
-            BitcoinAddress from, PubKey fromAddressPubkey, long amount, BitcoinAddress to, bool includeFee)
-        {
-            var fromStr = from.ToString();
-            var coins = (await _transactionOutputsService.GetUnspentOutputsAsync(fromStr)).ToList();
+            var coins = await GetUnspentCoins(input);
 
-            if (fromAddressPubkey != null)
-            {
-                var reedem = fromAddressPubkey.WitHash.ScriptPubKey;
-                coins = coins.Select(p => p.ToScriptCoin(reedem)).Cast<Coin>().ToList();
-            }
-
-            var balance = coins.Select(o => o.Amount).Sum(o => o.Satoshi);
-
-            if (balance > amount &&
-                balance - amount < new TxOut(Money.Zero, from)
-                    .GetDustThreshold(builder.StandardTransactionPolicy.MinRelayTxFee).Satoshi)
-                amount = balance;
-
-            return await SendWithChange(builder, coins, to, new Money(balance), new Money(amount),
-                from, includeFee);
-        }
-
-        public async Task<IBuildedTransaction> SendWithChange(TransactionBuilder builder, List<Coin> coins,
-            IDestination destination, Money balance, Money amount, IDestination changeDestination, bool includeFee)
-        {
-            if (amount.Satoshi <= 0)
-                throw new BusinessException("Amount can't be less or equal to zero", ErrorCode.BadInputParameter);
-
-            builder.AddCoins(coins)
-                .Send(destination, amount)
-                .SetChange(changeDestination);
+            builder.AddCoins(coins).SetChange(input.Address);
 
             var calculatedFee = await _feeService.CalcFeeForTransactionAsync(builder);
-            var requiredBalance = amount + (includeFee ? Money.Zero : calculatedFee);
 
-            if (balance < requiredBalance)
+            var requiredBalance = outputs.Sum(o => o.Amount) + calculatedFee;
+            var totalBalance = coins.Sum(o => o.Amount);
+
+            if (totalBalance < requiredBalance)
+                throw new BusinessException($"The sum of total applicable outputs is less than the required : {requiredBalance} satoshis.", ErrorCode.NotEnoughFundsAvailable);
+
+            builder.SendFees(calculatedFee);
+
+            var tx = builder.BuildTransaction(false);
+
+            return BuiltTransaction.Create(tx, calculatedFee, builder.FindSpentCoins(tx).Cast<Coin>());
+        }
+
+
+
+        public async Task<IBuiltTransaction> GetManyInputsTransferTransactionAsync(IList<OperationInput> fromAddresses, OperationOutput toAddress)
+        {
+            var inputs = fromAddresses.Select(o => o.ToBitcoinInput(_addressValidator)).ToList();
+            var output = toAddress.ToBitcoinOutput(_addressValidator);
+
+            var builder = new TransactionBuilder();
+
+            var totalBalance = Money.Zero;
+            var sendAmount = inputs.Sum(o => o.Amount);
+
+            foreach (var operationBitcoinInput in inputs)
+            {
+                var coins = await GetUnspentCoins(operationBitcoinInput);
+                builder.AddCoins(coins);
+
+                var addressBalance = coins.Sum(o => o.Amount);
+
+                if (addressBalance < operationBitcoinInput.Amount)
+                    throw new BusinessException($"The sum of total applicable outputs is less than the required : {operationBitcoinInput.Amount.Satoshi} satoshis.",
+                        ErrorCode.NotEnoughFundsAvailable);
+
+                // send change to source address
+                var change = addressBalance - operationBitcoinInput.Amount;
+                if (change < new TxOut(Money.Zero, operationBitcoinInput.Address).GetDustThreshold(builder.StandardTransactionPolicy.MinRelayTxFee))
+                    sendAmount += change;
+                else
+                    builder.Send(operationBitcoinInput.Address, change);
+                totalBalance += addressBalance;
+            }
+            builder.Send(output.Address, sendAmount);
+
+            var calculatedFee = await _feeService.CalcFeeForTransactionAsync(builder);
+
+            var requiredBalance = sendAmount;
+
+            if (totalBalance < requiredBalance)
+                throw new BusinessException(
+                    $"The sum of total applicable outputs is less than the required : {requiredBalance} satoshis.",
+                    ErrorCode.NotEnoughFundsAvailable);
+
+            if (calculatedFee > sendAmount)
+                throw new BusinessException(
+                    $"The sum of total applicable outputs is less than the required fee:{calculatedFee} satoshis.",
+                    ErrorCode.BalanceIsLessThanFee);
+            if (calculatedFee > 0)
+            {
+                builder.SubtractFees();
+                builder.SendFees(calculatedFee);
+            }
+
+            var tx = builder.BuildTransaction(false);
+
+            return BuiltTransaction.Create(tx, calculatedFee, builder.FindSpentCoins(tx).Cast<Coin>());
+        }
+
+
+        public async Task<IBuiltTransaction> GetTransferTransactionAsync(OperationInput fromAddress, OperationOutput toAddress, bool includeFee)
+        {
+            var input = fromAddress.ToBitcoinInput(_addressValidator);
+            var output = toAddress.ToBitcoinOutput(_addressValidator);
+
+            var builder = new TransactionBuilder();
+
+            var coins = await GetUnspentCoins(input);
+            builder.AddCoins(coins);
+
+            var addressBalance = coins.Sum(o => o.Amount);
+
+            if (addressBalance < input.Amount)
+                throw new BusinessException($"The sum of total applicable outputs is less than the required : {input.Amount.Satoshi} satoshis.",
+                    ErrorCode.NotEnoughFundsAvailable);
+
+            var sendAmount = input.Amount;
+            var sentFees = Money.Zero;
+
+            var change = addressBalance - input.Amount;
+            if (change < new TxOut(Money.Zero, input.Address).GetDustThreshold(builder.StandardTransactionPolicy.MinRelayTxFee).Satoshi)
+            {
+                if (includeFee)
+                    sendAmount += change;
+                else
+                {
+                    builder.SendFees(change);
+                    sentFees = change;
+                }
+            }
+
+            builder.Send(output.Address, sendAmount).SetChange(input.Address);
+
+            var calculatedFee = Money.Max(Money.Zero, await _feeService.CalcFeeForTransactionAsync(builder) - sentFees);
+
+            var requiredBalance = input.Amount + (includeFee ? Money.Zero : calculatedFee);
+
+            if (addressBalance < requiredBalance)
                 throw new BusinessException(
                     $"The sum of total applicable outputs is less than the required : {requiredBalance} satoshis.",
                     ErrorCode.NotEnoughFundsAvailable);
 
             if (includeFee)
             {
-                if (calculatedFee > amount)
+                if (calculatedFee > input.Amount)
                     throw new BusinessException(
                         $"The sum of total applicable outputs is less than the required fee:{calculatedFee} satoshis.",
                         ErrorCode.BalanceIsLessThanFee);
                 builder.SubtractFees();
-                amount = amount - calculatedFee;
             }
 
-            builder.SendFees(calculatedFee);
-
+            if (calculatedFee > 0)
+                builder.SendFees(calculatedFee);
             var tx = builder.BuildTransaction(false);
-            var usedCoins = tx.Inputs.Select(input => coins.First(o => o.Outpoint == input.PrevOut)).ToList();
 
-            return BuildedTransaction.Create(tx, calculatedFee, amount, usedCoins);
+            return BuiltTransaction.Create(tx, calculatedFee + sentFees, builder.FindSpentCoins(tx).Cast<Coin>());
         }
     }
 }

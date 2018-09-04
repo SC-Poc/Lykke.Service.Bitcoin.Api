@@ -1,22 +1,31 @@
 ﻿using System;
 using Common;
+using Lykke.AzureStorage.Tables;
+using Lykke.AzureStorage.Tables.Entity.Annotation;
 using Lykke.Service.Bitcoin.Api.Core.Domain.ObservableOperation;
+using Lykke.Service.Bitcoin.Api.Core.Domain.Operation;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Transactions
 {
-    public class ObservableOperationEntity : TableEntity, IObservableOperation
+    public class ObservableOperationEntity : AzureTableEntity, IObservableOperation
     {
         public string Status { get; set; }
         BroadcastStatus IObservableOperation.Status => Enum.Parse<BroadcastStatus>(Status);
 
         public Guid OperationId { get; set; }
-        public string FromAddress { get; set; }
-        public string ToAddress { get; set; }
+
+        [JsonValueSerializer]
+        public OperationInput[] Inputs { get; set; }
+
+        [JsonValueSerializer]
+        public OperationOutput[] Outputs { get; set; }
+        
         public string AssetId { get; set; }
-        public long AmountSatoshi { get; set; }
+        
         public long FeeSatoshi { get; set; }
         public DateTime Updated { get; set; }
+        public bool IncludeFee { get; set; }
         public string TxHash { get; set; }
         public int UpdatedAtBlockHeight { get; set; }
 
@@ -28,10 +37,10 @@ namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Transactions
                 OperationId = source.OperationId,
                 PartitionKey = partitionKey,
                 RowKey = rowKey,
-                FromAddress = source.FromAddress,
+                Inputs = source.Inputs,
+                Outputs = source.Outputs,
                 AssetId = source.AssetId,
-                ToAddress = source.ToAddress,
-                AmountSatoshi = source.AmountSatoshi,
+                IncludeFee = source.IncludeFee,
                 Status = source.Status.ToString(),
                 Updated = source.Updated,
                 TxHash = source.TxHash,

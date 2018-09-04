@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using NBitcoin.DataEncoders;
 
-namespace Lykke.Service.Bitcoin.Api.Services.TransactionOutputs
+namespace Lykke.Service.Bitcoin.Api.Services
 {
 
     public static class ScriptExtensions

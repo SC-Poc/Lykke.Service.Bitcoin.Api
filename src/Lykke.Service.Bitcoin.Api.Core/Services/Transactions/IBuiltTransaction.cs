@@ -3,12 +3,11 @@ using NBitcoin;
 
 namespace Lykke.Service.Bitcoin.Api.Core.Services.Transactions
 {
-    public interface IBuildedTransaction
+    public interface IBuiltTransaction
     {
         Transaction TransactionData { get; }
         Money Fee { get; }
-        Money Amount { get; }
-
+        
         IEnumerable<Coin> UsedCoins { get; }
     }
 }

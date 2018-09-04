@@ -77,11 +77,12 @@ namespace Lykke.Job.Bitcoin.Functions
             if (isCompleted)
             {
                 //Force update balances
-                var fromAddressUpdatedBalance =
-                    await _walletBalanceService.UpdateBtcBalanceAsync(operationMeta.FromAddress,
-                        _confirmationsSettings.MinConfirmationsToDetectOperation);
-                var toAddressUpdatedBalance = await _walletBalanceService.UpdateBtcBalanceAsync(operationMeta.ToAddress,
-                    _confirmationsSettings.MinConfirmationsToDetectOperation);
+                var fromAddressUpdatedBalance = await operationMeta.Inputs.SelectAsync(async o => await _walletBalanceService.UpdateBtcBalanceAsync(o.Address,
+                        _confirmationsSettings.MinConfirmationsToDetectOperation))
+                  ;
+                var toAddressUpdatedBalance = await operationMeta.Outputs.SelectAsync(async o =>
+                    await _walletBalanceService.UpdateBtcBalanceAsync(o.Address,
+                        _confirmationsSettings.MinConfirmationsToDetectOperation));
 
 
                 var operationCompletedLoggingContext = new

@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Operation;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Transactions;
 using Lykke.Service.Bitcoin.Api.Core.Services;
 using Lykke.Service.Bitcoin.Api.Core.Services.Exceptions;
+using Lykke.Service.Bitcoin.Api.Core.Services.Operation;
 using Lykke.Service.Bitcoin.Api.Core.Services.TransactionOutputs;
 using Lykke.Service.Bitcoin.Api.Core.Services.Transactions;
 using NBitcoin;
@@ -31,65 +34,61 @@ namespace Lykke.Service.Bitcoin.Api.Services.Operations
             _network = network;
         }
 
-        public async Task<BuildedTransactionInfo> GetOrBuildTransferTransactionAsync(Guid operationId,
-            BitcoinAddress fromAddress,
-            PubKey fromAddressPubKey,
-            BitcoinAddress toAddress,
+        public async Task<BuiltTransactionInfo> GetOrBuildTransferTransactionAsync(Guid operationId,
+            IList<OperationInput> inputs,
+            IList<OperationOutput> outputs,
             string assetId,
-            Money amountToSend,
             bool includeFee)
         {
             var existingOperation = await _operationMetaRepository.GetAsync(operationId);
             if (existingOperation != null)
             {
-                var existingAmount = existingOperation.IncludeFee
-                    ? existingOperation.AmountSatoshi + existingOperation.FeeSatoshi
-                    : existingOperation.AmountSatoshi;
-
-                if (existingOperation.FromAddress != fromAddress.ToString() ||
-                    existingOperation.ToAddress != toAddress.ToString() ||
-                    existingOperation.AssetId != assetId ||
-                    existingOperation.IncludeFee != includeFee ||
-                    existingAmount != amountToSend.Satoshi)
+                if (!OperationMetaComparer.Compare(existingOperation, inputs, outputs, assetId, includeFee))
                     throw new BusinessException("Conflict in operation parameters", ErrorCode.Conflict);
-
                 return await GetExistingTransaction(existingOperation.OperationId, existingOperation.Hash);
             }
-
-            var buildedTransaction = await _transactionBuilder.GetTransferTransactionAsync(fromAddress,
-                fromAddressPubKey, toAddress,
-                amountToSend, includeFee);
-
-            var buildedTransactionInfo = new BuildedTransactionInfo
+            IBuiltTransaction builtTransaction;
+            if (inputs.Count > 1)
             {
-                TransactionHex = buildedTransaction.TransactionData.ToHex(),
-                UsedCoins = buildedTransaction.UsedCoins
+                builtTransaction = await _transactionBuilder.GetManyInputsTransferTransactionAsync(inputs, outputs.Single());
+            }
+            else if (outputs.Count > 1)
+            {
+                builtTransaction = await _transactionBuilder.GetManyOutputsTransferTransactionAsync(inputs.Single(), outputs);
+            }
+            else
+            {
+                builtTransaction = await _transactionBuilder.GetTransferTransactionAsync(inputs.Single(), outputs.Single(), includeFee);
+            }
+
+            var builtTransactionInfo = new BuiltTransactionInfo
+            {
+                TransactionHex = builtTransaction.TransactionData.ToHex(),
+                UsedCoins = builtTransaction.UsedCoins
             };
 
             await _transactionOutputsService.AddInternalOutputs(operationId,
-                buildedTransaction.TransactionData.Outputs.AsCoins());
+                builtTransaction.TransactionData.Outputs.AsCoins());
 
-            var txHash = buildedTransaction.TransactionData.GetHash().ToString();
+            var txHash = builtTransaction.TransactionData.GetHash().ToString();
 
             await _transactionBlobStorage.AddOrReplaceTransactionAsync(operationId, txHash, TransactionBlobType.Initial,
-                buildedTransactionInfo.ToJson(_network));
+                builtTransactionInfo.ToJson(_network));
 
-            var operation = OperationMeta.Create(operationId, txHash, fromAddress.ToString(), toAddress.ToString(),
-                assetId,
-                buildedTransaction.Amount.Satoshi, buildedTransaction.Fee.Satoshi, includeFee);
+            var operation = OperationMeta.Create(operationId, txHash, inputs, outputs, assetId, builtTransaction.Fee.Satoshi, includeFee);
 
             if (await _operationMetaRepository.TryInsertAsync(operation))
-                return buildedTransactionInfo;
+                return builtTransactionInfo;
 
             existingOperation = await _operationMetaRepository.GetAsync(operationId);
             return await GetExistingTransaction(operationId, existingOperation.Hash);
         }
 
-        private async Task<BuildedTransactionInfo> GetExistingTransaction(Guid operationId, string hash)
+        private async Task<BuiltTransactionInfo> GetExistingTransaction(Guid operationId, string hash)
         {
-            var alreadyBuildedTransaction =
+            var alreadyBuiltTransaction =
                 await _transactionBlobStorage.GetTransactionAsync(operationId, hash, TransactionBlobType.Initial);
-            return Serializer.ToObject<BuildedTransactionInfo>(alreadyBuildedTransaction);
+            return Serializer.ToObject<BuiltTransactionInfo>(alreadyBuiltTransaction);
         }
     }
 }

@@ -1,9 +1,10 @@
-﻿using Lykke.Service.Bitcoin.Api.Core.Domain.Fee;
+﻿using Lykke.AzureStorage.Tables;
+using Lykke.Service.Bitcoin.Api.Core.Domain.Fee;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Fee
 {
-    public class FeeRateEntity : TableEntity, IFeeRate
+    public class FeeRateEntity : AzureTableEntity, IFeeRate
     {
         public int FeePerByte { get; set; }
 

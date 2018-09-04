@@ -1,10 +1,11 @@
 ﻿using System;
+using Lykke.AzureStorage.Tables;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Outputs;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.Service.Bitcoin.Api.AzureRepositories.InternalOutputs
 {
-    public class InternalOutputEntity : TableEntity, IInternalOutput
+    public class InternalOutputEntity : AzureTableEntity, IInternalOutput
     {
         public string TransactionHash { get; set; }
         public int N { get; set; }

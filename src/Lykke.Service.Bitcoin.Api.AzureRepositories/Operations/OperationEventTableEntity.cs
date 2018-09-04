@@ -1,10 +1,11 @@
 ﻿using System;
+using Lykke.AzureStorage.Tables;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Operation;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Operations
 {
-    public class OperationEventTableEntity : TableEntity, IOperationEvent
+    public class OperationEventTableEntity : AzureTableEntity, IOperationEvent
     {
         public string Type { get; set; }
         OperationEventType IOperationEvent.Type => Enum.Parse<OperationEventType>(Type);

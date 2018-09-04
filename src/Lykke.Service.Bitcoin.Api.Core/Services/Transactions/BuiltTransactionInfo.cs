@@ -4,7 +4,7 @@ using NBitcoin.JsonConverters;
 
 namespace Lykke.Service.Bitcoin.Api.Core.Services.Transactions
 {
-    public class BuildedTransactionInfo
+    public class BuiltTransactionInfo
     {
         public string TransactionHex { get; set; }
 

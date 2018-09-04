@@ -4,6 +4,8 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.AzureStorage.Tables.Entity.Metamodel;
+using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.Common;
 using Lykke.Common.Api.Contract.Responses;
 using Lykke.Common.ApiLibrary.Middleware;
@@ -99,6 +101,9 @@ namespace Lykke.Job.Bitcoin
                 var logFactory = ApplicationContainer.Resolve<ILogFactory>();
                 _log = logFactory.CreateLog(this);
                 _healthNotifier = ApplicationContainer.Resolve<IHealthNotifier>();
+
+                var provider = new AnnotationsBasedMetamodelProvider();
+                EntityMetamodel.Configure(provider);
 
                 return new AutofacServiceProvider(ApplicationContainer);
             }

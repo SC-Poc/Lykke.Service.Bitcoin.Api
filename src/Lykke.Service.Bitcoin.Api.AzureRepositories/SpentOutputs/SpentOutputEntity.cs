@@ -1,10 +1,11 @@
 ﻿using System;
+using Lykke.AzureStorage.Tables;
 using Lykke.Service.Bitcoin.Api.Core.Services.TransactionOutputs;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.Service.Bitcoin.Api.AzureRepositories.SpentOutputs
 {
-    public class SpentOutputEntity : TableEntity, IOutput
+    public class SpentOutputEntity : AzureTableEntity, IOutput
     {
         public Guid OperationId { get; set; }
 

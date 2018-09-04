@@ -1,11 +1,12 @@
 ﻿using System;
 using Common;
+using Lykke.AzureStorage.Tables;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Transactions;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Transactions
 {
-    public class UnconfirmedTransactionEntity : TableEntity, IUnconfirmedTransaction
+    public class UnconfirmedTransactionEntity : AzureTableEntity, IUnconfirmedTransaction
     {
         public string TxHash { get; set; }
         public Guid OperationId { get; set; }

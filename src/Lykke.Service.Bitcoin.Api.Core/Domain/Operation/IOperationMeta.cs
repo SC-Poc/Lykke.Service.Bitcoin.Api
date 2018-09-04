@@ -1,4 +1,5 @@
 ﻿using System;
+using Lykke.AzureStorage.Tables.Entity.Annotation;
 
 namespace Lykke.Service.Bitcoin.Api.Core.Domain.Operation
 {
@@ -6,13 +7,13 @@ namespace Lykke.Service.Bitcoin.Api.Core.Domain.Operation
     {
         Guid OperationId { get; }
         string Hash { get; }
-        string FromAddress { get; }
 
-        string ToAddress { get; }
-
+        OperationInput[] Inputs { get; set; }
+        
+        OperationOutput[] Outputs { get; set; }
+        
         string AssetId { get; }
-
-        long AmountSatoshi { get; }
+        
         long FeeSatoshi { get; }
 
         bool IncludeFee { get; }

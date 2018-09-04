@@ -32,7 +32,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
             while (true)
             {
                 var response = await _ninjaClient.Broadcast(tx);
-                if (response.Success)
+                if (response.Success && response.Error == null)
                     return;
                 if (tryCnt-- <= 0 || response.Error.Reason != "Unknown")
                     throw new BusinessException(response.Error.Reason, ErrorCode.BroadcastError);
@@ -43,7 +43,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
         public async Task<int> GetTxConfirmationCountAsync(string txHash)
         {
             var tx = await _ninjaClient.GetTransaction(uint256.Parse(txHash));
-            return tx.Block?.Confirmations ?? 0;
+            return tx?.Block?.Confirmations ?? 0;
         }
 
 

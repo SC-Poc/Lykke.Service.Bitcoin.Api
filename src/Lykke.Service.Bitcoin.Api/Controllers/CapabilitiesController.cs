@@ -16,8 +16,8 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         {
             return new CapabilitiesResponse
             {
-                AreManyInputsSupported = false,
-                AreManyOutputsSupported = false,
+                AreManyInputsSupported = true,
+                AreManyOutputsSupported = true,                
                 IsTransactionsRebuildingSupported = false
             };
         }

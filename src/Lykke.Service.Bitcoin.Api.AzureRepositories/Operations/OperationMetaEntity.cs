@@ -1,18 +1,25 @@
 ﻿using System;
+using AzureStorage.Tables;
 using Common;
+using Lykke.AzureStorage.Tables;
+using Lykke.AzureStorage.Tables.Entity.Annotation;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Operation;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Operations
 {
-    public class OperationMetaEntity : TableEntity, IOperationMeta
+    public class OperationMetaEntity : AzureTableEntity, IOperationMeta
     {
         public Guid OperationId { get; set; }
         public string Hash { get; set; }
-        public string FromAddress { get; set; }
-        public string ToAddress { get; set; }
+
+        [JsonValueSerializer]
+        public OperationInput[] Inputs { get; set; }
+
+        [JsonValueSerializer]
+        public OperationOutput[] Outputs { get; set; }
+        
         public string AssetId { get; set; }
-        public long AmountSatoshi { get; set; }
         public long FeeSatoshi { get; set; }
         public bool IncludeFee { get; set; }
         public DateTime Inserted { get; set; }
@@ -24,12 +31,11 @@ namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Operations
                 PartitionKey = partitionKey,
                 RowKey = rowKey,
                 Hash = source.Hash,
-                ToAddress = source.ToAddress,
-                FromAddress = source.FromAddress,
+                Inputs = source.Inputs,
+                Outputs = source.Outputs,
                 AssetId = source.AssetId,
                 OperationId = source.OperationId,
-                IncludeFee = source.IncludeFee,
-                AmountSatoshi = source.AmountSatoshi,
+                IncludeFee = source.IncludeFee,                
                 Inserted = source.Inserted,
                 FeeSatoshi = source.FeeSatoshi
             };

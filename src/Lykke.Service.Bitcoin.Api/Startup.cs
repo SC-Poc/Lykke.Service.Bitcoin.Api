@@ -1,5 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Lykke.AzureStorage.Tables.Entity.Metamodel;
+using Lykke.AzureStorage.Tables.Entity.Metamodel.Providers;
 using Lykke.Logs.Loggers.LykkeSlack;
 using Lykke.Sdk;
 using Lykke.Service.Bitcoin.Api.Middleware;
@@ -24,6 +26,8 @@ namespace Lykke.Service.Bitcoin.Api
         {
             return services.BuildServiceProvider<AppSettings>(options =>
             {
+                EntityMetamodel.Configure(new AnnotationsBasedMetamodelProvider());
+
                 options.SwaggerOptions = _swaggerOptions;
 
                 options.Logs = logs =>
@@ -37,7 +41,7 @@ namespace Lykke.Service.Bitcoin.Api
                         extendedLogs.AddAdditionalSlackChannel("BlockChainIntegrationImportantMessages",
                             channelOptions => { channelOptions.MinLogLevel = LogLevel.Warning; });
                     };
-                };
+                };               
             });
         }
 
