@@ -28,7 +28,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
 
         public async Task BroadCastTransactionAsync(Transaction tx)
         {
-            var tryCnt = 5;
+            var tryCnt = 10;
             while (true)
             {
                 var response = await _ninjaClient.Broadcast(tx);
@@ -36,7 +36,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
                     return;
                 if (tryCnt-- <= 0 || response.Error.Reason != "Unknown")
                     throw new BusinessException(response.Error.Reason, ErrorCode.BroadcastError);
-                await Task.Delay(5000);
+                await Task.Delay(10000);
             }
         }
 
