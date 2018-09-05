@@ -24,8 +24,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 namespace Lykke.Service.Bitcoin.Api.Controllers
 {
     public class OperationsController : Controller
-    {
-        private readonly IAddressValidator _addressValidator;
+    {        
         private readonly IBroadcastService _broadcastService;
         private readonly Network _network;
         private readonly IObservableOperationService _observableOperationService;
@@ -33,14 +32,12 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         private readonly IOperationService _operationService;
 
 
-        public OperationsController(IOperationService operationService,
-            IAddressValidator addressValidator,
+        public OperationsController(IOperationService operationService,            
             IBroadcastService broadcastService,
             IObservableOperationService observableOperationService, IOperationEventRepository operationEventRepository,
             Network network)
         {
-            _operationService = operationService;
-            _addressValidator = addressValidator;
+            _operationService = operationService;            
             _broadcastService = broadcastService;
             _observableOperationService = observableOperationService;
             _operationEventRepository = operationEventRepository;
@@ -85,6 +82,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
                         Amount = amountSatoshi
                     }
                 },
+                OperationType.Single,
                 request.AssetId, request.IncludeFee);
 
 
@@ -129,6 +127,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
                         Address = request.ToAddress
                     }
                 },
+                OperationType.ManyInputs,
                 request.AssetId, true);
 
 
@@ -143,7 +142,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         [HttpPost("api/transactions/many-outputs")]
         [ProducesResponseType(typeof(BuildTransactionResponse), 200)]
         [ProducesResponseType(typeof(ErrorResponse), 400)]
-        public async Task<IActionResult> BuildTransactionManyInputs([FromBody]BuildTransactionWithManyOutputsRequest request)
+        public async Task<IActionResult> BuildTransactionManyOutputs([FromBody]BuildTransactionWithManyOutputsRequest request)
         {
             if (request == null) throw new ValidationApiException("Unable deserialize request");
 
@@ -173,7 +172,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
                         AddressContext = request.FromAddressContext?.DeserializeJson<AddressContextContract>()?.PubKey
                     }
                 },
-                outputs, request.AssetId, false);
+                outputs, OperationType.ManyOutputs, request.AssetId, false);
 
 
             return Ok(new BuildTransactionResponse

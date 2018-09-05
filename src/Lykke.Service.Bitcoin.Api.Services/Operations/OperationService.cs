@@ -37,6 +37,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.Operations
         public async Task<BuiltTransactionInfo> GetOrBuildTransferTransactionAsync(Guid operationId,
             IList<OperationInput> inputs,
             IList<OperationOutput> outputs,
+            OperationType operationType,
             string assetId,
             bool includeFee)
         {
@@ -48,17 +49,21 @@ namespace Lykke.Service.Bitcoin.Api.Services.Operations
                 return await GetExistingTransaction(existingOperation.OperationId, existingOperation.Hash);
             }
             IBuiltTransaction builtTransaction;
-            if (inputs.Count > 1)
+            switch (operationType)
             {
-                builtTransaction = await _transactionBuilder.GetManyInputsTransferTransactionAsync(inputs, outputs.Single());
-            }
-            else if (outputs.Count > 1)
-            {
-                builtTransaction = await _transactionBuilder.GetManyOutputsTransferTransactionAsync(inputs.Single(), outputs);
-            }
-            else
-            {
-                builtTransaction = await _transactionBuilder.GetTransferTransactionAsync(inputs.Single(), outputs.Single(), includeFee);
+                case OperationType.Single:
+                    builtTransaction = await _transactionBuilder.GetTransferTransactionAsync(inputs.Single(), outputs.Single(), includeFee);
+
+                    break;
+                case OperationType.ManyInputs:
+                    builtTransaction = await _transactionBuilder.GetManyInputsTransferTransactionAsync(inputs, outputs.Single());
+
+                    break;
+                case OperationType.ManyOutputs:
+                    builtTransaction = await _transactionBuilder.GetManyOutputsTransferTransactionAsync(inputs.Single(), outputs);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(operationType));
             }
 
             var builtTransactionInfo = new BuiltTransactionInfo
