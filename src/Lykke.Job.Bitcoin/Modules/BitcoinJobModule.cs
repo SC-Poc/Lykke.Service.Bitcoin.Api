@@ -1,5 +1,6 @@
 ﻿using System;
 using Autofac;
+using Lykke.Job.Bitcoin.Functions;
 using Lykke.Job.Bitcoin.Settings;
 using Lykke.JobTriggers.Extenstions;
 using Lykke.Service.Assets.Client;
@@ -27,6 +28,9 @@ namespace Lykke.Job.Bitcoin.Modules
             builder.RegisterAssetsClient(AssetServiceSettings.Create(
                 new Uri(_settings.CurrentValue.AssetsServiceClient.ServiceUrl), TimeSpan.FromMinutes(3)));
             builder.AddTriggers();
+
+            builder.RegisterType<UpdateBalanceFunctions>().SingleInstance();
+            builder.RegisterType<UpdateObservableOperations>().SingleInstance();
         }
     }
 }

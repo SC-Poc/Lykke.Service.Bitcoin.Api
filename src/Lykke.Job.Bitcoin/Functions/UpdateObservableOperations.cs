@@ -23,6 +23,7 @@ namespace Lykke.Job.Bitcoin.Functions
         private readonly IOperationMetaRepository _operationMetaRepository;
         private readonly IUnconfirmedTransactionRepository _unconfirmedTransactionRepository;
         private readonly IWalletBalanceService _walletBalanceService;
+        private long _lastProcessedBlock;
 
         public UpdateObservableOperations(IUnconfirmedTransactionRepository unconfirmedTransactionRepository,
             IBlockChainProvider blockChainProvider,
@@ -43,9 +44,13 @@ namespace Lykke.Job.Bitcoin.Functions
             _walletBalanceService = walletBalanceService;
         }
 
-        [TimerTrigger("00:02:00")]
+        [TimerTrigger("00:00:30")]
         public async Task DetectUnconfirmedTransactions()
         {
+            var lastBlock = await _blockChainProvider.GetLastBlockHeightAsync();
+            if (lastBlock == _lastProcessedBlock)
+                return;
+
             var unconfirmedTxs = await _unconfirmedTransactionRepository.GetAllAsync();
 
             foreach (var unconfirmedTransaction in unconfirmedTxs)
@@ -57,6 +62,8 @@ namespace Lykke.Job.Bitcoin.Functions
                 {
                     _log.Error(unconfirmedTransaction.ToJson(), e);
                 }
+
+            _lastProcessedBlock = lastBlock;
         }
 
         private async Task CheckUnconfirmedTransaction(IUnconfirmedTransaction unconfirmedTransaction)
@@ -69,8 +76,7 @@ namespace Lykke.Job.Bitcoin.Functions
                 return;
             }
 
-            var confirmationCount =
-                await _blockChainProvider.GetTxConfirmationCountAsync(unconfirmedTransaction.TxHash);
+            var confirmationCount = await _blockChainProvider.GetTxConfirmationCountAsync(unconfirmedTransaction.TxHash);
 
             var isCompleted = confirmationCount >= _confirmationsSettings.MinConfirmationsToDetectOperation;
             ;
