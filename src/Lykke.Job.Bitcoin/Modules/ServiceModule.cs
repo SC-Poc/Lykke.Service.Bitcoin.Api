@@ -1,4 +1,6 @@
-﻿using Autofac;
+﻿using System;
+using System.Net;
+using Autofac;
 using Autofac.Features.AttributeFilters;
 using Lykke.Job.Bitcoin.Settings;
 using Lykke.Job.Bitcoin.Settings.ServiceSettings;
@@ -16,6 +18,7 @@ using Lykke.Service.Bitcoin.Api.Services.Operations;
 using Lykke.Service.Bitcoin.Api.Services.Wallet;
 using Lykke.SettingsReader;
 using NBitcoin;
+using NBitcoin.RPC;
 using QBitNinja.Client;
 
 namespace Lykke.Job.Bitcoin.Modules
@@ -57,6 +60,7 @@ namespace Lykke.Job.Bitcoin.Modules
         {
             builder.RegisterInstance(new QBitNinjaClient(_settings.NinjaApiUrl, Network.GetNetwork(_settings.Network)));
             builder.RegisterType<NinjaApiBlockChainProvider>().As<IBlockChainProvider>();
+            builder.RegisterInstance(new RPCClient(new NetworkCredential(_settings.Rpc.UserName, _settings.Rpc.Password), new Uri(_settings.Rpc.Host)));
         }
 
 

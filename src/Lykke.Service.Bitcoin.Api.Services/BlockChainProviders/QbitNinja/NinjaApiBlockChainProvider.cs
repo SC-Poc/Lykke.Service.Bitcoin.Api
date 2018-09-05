@@ -6,6 +6,7 @@ using Lykke.Service.Bitcoin.Api.Core.Services.Address;
 using Lykke.Service.Bitcoin.Api.Core.Services.BlockChainReaders;
 using Lykke.Service.Bitcoin.Api.Core.Services.Exceptions;
 using NBitcoin;
+using NBitcoin.RPC;
 using QBitNinja.Client;
 using QBitNinja.Client.Models;
 
@@ -16,28 +17,21 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
         private readonly IAddressValidator _addressValidator;
         private readonly Network _network;
         private readonly QBitNinjaClient _ninjaClient;
+        private readonly RPCClient _rpcClient;
 
-        public NinjaApiBlockChainProvider(QBitNinjaClient ninjaClient, Network network,
+        public NinjaApiBlockChainProvider(QBitNinjaClient ninjaClient, RPCClient rpcClient, Network network,
             IAddressValidator addressValidator)
         {
             _ninjaClient = ninjaClient;
+            _rpcClient = rpcClient;
             _ninjaClient.Colored = true;
             _network = network;
             _addressValidator = addressValidator;
         }
 
-        public async Task BroadCastTransactionAsync(Transaction tx)
+        public Task BroadCastTransactionAsync(Transaction tx)
         {
-            var tryCnt = 10;
-            while (true)
-            {
-                var response = await _ninjaClient.Broadcast(tx);
-                if (response.Success && response.Error == null)
-                    return;
-                if (tryCnt-- <= 0 || response.Error.Reason != "Unknown")
-                    throw new BusinessException(response.Error.Reason, ErrorCode.BroadcastError);
-                await Task.Delay(10000);
-            }
+            return _rpcClient.SendRawTransactionAsync(tx);
         }
 
         public async Task<int> GetTxConfirmationCountAsync(string txHash)

@@ -36,6 +36,13 @@ Bitcoin:
         settings-key: BitcoinApi-FeeType    
         types:
             - Optional
+    Rpc:
+        UserName:
+            settings-key: BitcoinApi-RpcUserName
+        Password:
+            settings-key: BitcoinApi-RpcPassword
+        Host:
+            settings-key: BitcoinApi-RpcHost
 AssetsServiceClient: 
     ServiceUrl: 
         settings-key: AssetsServiceUrl         
