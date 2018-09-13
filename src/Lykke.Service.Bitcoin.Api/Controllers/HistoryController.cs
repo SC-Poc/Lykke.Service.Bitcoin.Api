@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Lykke.Common.ApiLibrary.Exceptions;
@@ -23,7 +24,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         }
 
         [HttpPost("from/{address}/observation")]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
         public IActionResult ObserveFrom(
             [FromRoute] string address)
         {
@@ -32,7 +33,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         }
 
         [HttpPost("to/{address}/observation")]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
         public IActionResult ObserveTo(
             [FromRoute] string address)
         {
@@ -41,7 +42,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         }
 
         [HttpDelete("from/{address}/observation")]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
         public IActionResult DeleteObservationFrom(
             [FromRoute] string address)
         {
@@ -50,7 +51,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         }
 
         [HttpDelete("to/{address}/observation")]
-        [ProducesResponseType((int) HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
         public IActionResult DeleteObservationTo(
             [FromRoute] string address)
         {
@@ -59,7 +60,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         }
 
         [HttpGet("from/{address}")]
-        [ProducesResponseType((int) HttpStatusCode.OK, Type = typeof(HistoricalTransactionContract[]))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(HistoricalTransactionContract[]))]
         public async Task<IActionResult> GetHistoryFrom(
             [FromRoute] string address,
             [FromQuery] string afterHash,
@@ -77,7 +78,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         }
 
         [HttpGet("to/{address}")]
-        [ProducesResponseType((int) HttpStatusCode.OK, Type = typeof(HistoricalTransactionContract[]))]
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(HistoricalTransactionContract[]))]
         public async Task<IActionResult> GetHistoryTo(
             [FromRoute] string address,
             [FromQuery] string afterHash,
@@ -109,7 +110,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
                 AssetId = source.AssetId,
                 Amount = MoneyConversionHelper.SatoshiToContract(source.AmountSatoshi),
                 Hash = source.TxHash,
-                Timestamp = source.TimeStamp,
+                Timestamp = DateTime.SpecifyKind(source.TimeStamp, DateTimeKind.Utc),
                 TransactionType = source.IsSending ? TransactionType.Send : TransactionType.Receive
             };
         }

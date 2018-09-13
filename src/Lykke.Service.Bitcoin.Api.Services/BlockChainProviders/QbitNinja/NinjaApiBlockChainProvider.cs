@@ -77,7 +77,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
             var operations = await _ninjaClient.GetBalanceBetween(new BalanceSelector(address),
                 BlockFeature.Parse("tip"), new BlockFeature(heightTo));
 
-            return await operations.Operations.SelectAsync(async op =>
+            return (await operations.Operations.SelectAsync(async op =>
             {
                 var tx = await _ninjaClient.GetTransaction(op.TransactionId);
                 return new BitcoinTransaction
@@ -95,7 +95,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
                         Value = output.TxOut.Value
                     }).ToList()
                 };
-            });
+            })).OrderBy(o => o.Timestamp).ToList();
         }
 
         private async Task<IList<ICoin>> GetAllUnspentOutputs(string address, int minConfirmationCount)
