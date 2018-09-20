@@ -110,8 +110,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
                 AssetId = source.AssetId,
                 Amount = MoneyConversionHelper.SatoshiToContract(source.AmountSatoshi),
                 Hash = source.TxHash,
-                Timestamp = DateTime.SpecifyKind(source.TimeStamp, DateTimeKind.Utc),
-                TransactionType = source.IsSending ? TransactionType.Send : TransactionType.Receive
+                Timestamp = DateTime.SpecifyKind(source.TimeStamp, DateTimeKind.Utc),                
             };
         }
     }
