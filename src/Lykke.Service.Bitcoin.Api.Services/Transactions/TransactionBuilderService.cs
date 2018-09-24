@@ -55,7 +55,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.Transactions
             builder.SetChange(input.Address);
 
             var change = addressBalance - sendAmount;      
-            if (change < new TxOut(Money.Zero, input.Address).GetDustThreshold(builder.StandardTransactionPolicy.MinRelayTxFee))
+            if (change < new TxOut(Money.Zero, input.Address).GetDustThreshold(builder.StandardTransactionPolicy.MinRelayTxFee) && change > 0)
             {
                 builder.SendFees(change);
                 sentFees = change;
