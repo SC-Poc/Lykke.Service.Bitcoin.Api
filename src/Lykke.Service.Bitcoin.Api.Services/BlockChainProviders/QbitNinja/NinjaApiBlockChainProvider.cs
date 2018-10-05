@@ -71,7 +71,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
             if (!string.IsNullOrEmpty(afterHash))
             {
                 var tx = await _ninjaClient.GetTransaction(uint256.Parse(afterHash));
-                heightTo = tx.Block.Height;
+                heightTo = tx?.Block?.Height ?? 0;
             }
 
             var operations = await _ninjaClient.GetBalanceBetween(new BalanceSelector(address),
