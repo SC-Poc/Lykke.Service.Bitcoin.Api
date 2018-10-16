@@ -1,0 +1,63 @@
+Bitcoin:
+    Db: 
+        DataConnString:
+            settings-key: BitcoinApi-DataConnString
+            types:
+                - AzureTableStorage
+        LogsConnString:
+            settings-key: BitcoinApi-LogsConnString
+            types:
+                - AzureTableStorage
+    Network:
+        settings-key: BitcoinApi-Network
+    NinjaApiUrl:
+        settings-key: BitcoinApi-NinjaApiUrl
+    MinConfirmationsToDetectOperation:
+        settings-key: BitcoinApi-MinConfirmationsToDetectOperation
+        types:
+            - Optional
+    SpentOutputsExpirationDays:
+        settings-key: BitcoinApi-SpentOutputsExpirationDays
+        types:
+            - Optional
+    FeePerByte:
+        settings-key: BitcoinApi-FeePerByte
+        types:
+            - Optional 
+    MaxFeePerByte:
+        settings-key: BitcoinApi-MaxFeePerByte
+        types:
+            - Optional
+    MinFeePerByte:
+        settings-key: BitcoinApi-MinFeePerByte
+        types:
+            - Optional
+    FeeType:
+        settings-key: BitcoinApi-FeeType    
+        types:
+            - Optional
+    Rpc:
+        UserName:
+            settings-key: BitcoinApi-RpcUserName
+        Password:
+            settings-key: BitcoinApi-RpcPassword
+        Host:
+            settings-key: BitcoinApi-RpcHost
+AssetsServiceClient: 
+    ServiceUrl: 
+        settings-key: AssetsServiceUrl         
+    ExpirationPeriod: 
+        settings-key: AssetsServiceExpirationPeriod        
+
+MonitoringServiceClient:
+    MonitoringServiceUrl:
+        settings-key: MonitoringServiceUrl
+
+SlackNotifications:
+    AzureQueue:
+        ConnectionString:
+            settings-key: SlackNotificationsConnString
+            types:
+                - AzureTableStorage
+        QueueName:
+            settings-key: SlackQueueName
