@@ -50,7 +50,6 @@ namespace Lykke.Job.Bitcoin.Modules
             builder.RegisterInstance(network).As<Network>();
         }
 
-
         private void RegisterAddressValidatorServices(ContainerBuilder builder)
         {
             builder.RegisterType<AddressValidator>().As<IAddressValidator>().WithAttributeFiltering();
@@ -58,11 +57,15 @@ namespace Lykke.Job.Bitcoin.Modules
 
         private void RegisterBlockChainReaders(ContainerBuilder builder)
         {
-            builder.RegisterInstance(new QBitNinjaClient(_settings.NinjaApiUrl, Network.GetNetwork(_settings.Network)));
-            builder.RegisterType<NinjaApiBlockChainProvider>().As<IBlockChainProvider>();
-            builder.RegisterInstance(new RPCClient(new NetworkCredential(_settings.Rpc.UserName, _settings.Rpc.Password), new Uri(_settings.Rpc.Host)));
-        }
+            var networkType = Network.GetNetwork(_settings.Network);
 
+            builder.RegisterInstance(new QBitNinjaClient(_settings.NinjaApiUrl, networkType));
+            builder.RegisterType<NinjaApiBlockChainProvider>().As<IBlockChainProvider>();
+            builder.RegisterInstance(new RPCClient(
+                new NetworkCredential(_settings.Rpc.UserName, _settings.Rpc.Password),
+                new Uri(_settings.Rpc.Host),
+                networkType));
+        }
 
         private void RegisterDetectorServices(ContainerBuilder builder)
         {
