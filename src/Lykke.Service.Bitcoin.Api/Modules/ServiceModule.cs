@@ -80,10 +80,15 @@ namespace Lykke.Service.Bitcoin.Api.Modules
 
         private void RegisterBlockChainReaders(ContainerBuilder builder)
         {
-            builder.RegisterInstance(new QBitNinjaClient(_settings.NinjaApiUrl, Network.GetNetwork(_settings.Network)));
+            var networkType = Network.GetNetwork(_settings.Network);
+
+            builder.RegisterInstance(new QBitNinjaClient(_settings.NinjaApiUrl, networkType));
             builder.RegisterType<NinjaApiBlockChainProvider>().As<IBlockChainProvider>();
 
-            builder.RegisterInstance(new RPCClient(new NetworkCredential(_settings.Rpc.UserName, _settings.Rpc.Password), new Uri(_settings.Rpc.Host)));
+            builder.RegisterInstance(new RPCClient(
+                new NetworkCredential(_settings.Rpc.UserName, _settings.Rpc.Password),
+                new Uri(_settings.Rpc.Host),
+                networkType));
         }
 
         private void RegisterTransactionOutputsServices(ContainerBuilder builder)
