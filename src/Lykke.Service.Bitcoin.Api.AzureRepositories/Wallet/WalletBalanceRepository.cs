@@ -31,6 +31,7 @@ namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Wallet
         public async Task<IPaginationResult<IWalletBalance>> GetBalancesAsync(int take, string continuation)
         {
             var result = await _storage.GetDataWithContinuationTokenAsync(take, continuation);
+
             return PaginationResult<IWalletBalance>.Create(result.Entities, result.ContinuationToken);
         }
 

@@ -67,6 +67,10 @@ namespace Lykke.Job.Bitcoin.Modules
                 .As<IWalletBalanceRepository>()
                 .SingleInstance();
 
+            builder.Register(x => LastProcessedBlockRepository.Create(connectionString, x.Resolve<ILogFactory>()))
+                .As<ILastProcessedBlockRepository>()
+                .SingleInstance();
+
             builder.Register(x => SpentOutputRepository.Create(connectionString, x.Resolve<ILogFactory>()))
                 .As<ISpentOutputRepository>()
                 .SingleInstance();

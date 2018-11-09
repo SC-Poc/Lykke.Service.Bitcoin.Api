@@ -75,6 +75,12 @@ namespace Lykke.Service.Bitcoin.Api.Services.Wallet
             }
         }
 
+        public async Task UpdateBalanceAsync(string address, int minConfirmations)
+        {
+            var wallet = await _observableWalletRepository.GetAsync(address);
+            await UpdateBalanceAsync(wallet, minConfirmations);
+        }
+
         private async Task<IWalletBalance> UpdateBitcoinBalance(IObservableWallet wallet, int height,
             int minConfirmations)
         {

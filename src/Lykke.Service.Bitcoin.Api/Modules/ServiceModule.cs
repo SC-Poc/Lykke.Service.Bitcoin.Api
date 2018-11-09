@@ -51,6 +51,18 @@ namespace Lykke.Service.Bitcoin.Api.Modules
             RegisterObservableServices(builder);
             RegisterHistoryServices(builder);
             RegisterAssetServices(builder);
+
+
+            builder.RegisterInstance(new HotWalletAddressSettings
+            {
+                HotWalletAddress = _settings.HotWalletAddress
+            });
+
+            builder.RegisterInstance(new BlockHeightSettings
+            {
+                IgnoreUnspentOutputsBeforeBlockHeight = _settings.IgnoreUnspentOutputsBeforeBlockHeight,
+                StartFromBlockHeight = _settings.StartFromBlockHeight
+            });
         }
 
         private void RegisterNetwork(ContainerBuilder builder)

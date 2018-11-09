@@ -5,6 +5,7 @@ using Common;
 using Lykke.Service.Bitcoin.Api.Core.Services.Address;
 using Lykke.Service.Bitcoin.Api.Core.Services.BlockChainReaders;
 using Lykke.Service.Bitcoin.Api.Core.Services.Exceptions;
+using Lykke.Service.Bitcoin.Api.Services.Wallet;
 using NBitcoin;
 using NBitcoin.RPC;
 using QBitNinja.Client;
@@ -18,15 +19,17 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
         private readonly Network _network;
         private readonly QBitNinjaClient _ninjaClient;
         private readonly RPCClient _rpcClient;
+        private readonly BlockHeightSettings _blockHeightSettings;
 
         public NinjaApiBlockChainProvider(QBitNinjaClient ninjaClient, RPCClient rpcClient, Network network,
-            IAddressValidator addressValidator)
+            IAddressValidator addressValidator, BlockHeightSettings blockHeightSettings)
         {
             _ninjaClient = ninjaClient;
             _rpcClient = rpcClient;
             _ninjaClient.Colored = true;
             _network = network;
             _addressValidator = addressValidator;
+            _blockHeightSettings = blockHeightSettings;
         }
 
         public Task BroadCastTransactionAsync(Transaction tx)
@@ -98,11 +101,21 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
             })).OrderBy(o => o.Timestamp).ToList();
         }
 
+        public Task<GetTransactionResponse> GetTransactionAsync(uint256 txHash)
+        {
+            return _ninjaClient.GetTransaction(txHash);
+        }
+
+        public async Task<GetBlockResponse> GetBlockAsync(int blockHeight)
+        {
+            return await _ninjaClient.GetBlock(BlockFeature.Parse(blockHeight.ToString()));
+        }
+
         private async Task<IList<ICoin>> GetAllUnspentOutputs(string address, int minConfirmationCount)
         {
             var response = await _ninjaClient.GetBalance(_addressValidator.GetBitcoinAddress(address), true);
             return response.Operations
-                .Where(o => o.Height >= 549305)
+                .Where(o => o.Height >= _blockHeightSettings.IgnoreUnspentOutputsBeforeBlockHeight)
                 .Where(o => o.Confirmations >= minConfirmationCount)
                 .SelectMany(o => o.ReceivedCoins).ToList();
         }

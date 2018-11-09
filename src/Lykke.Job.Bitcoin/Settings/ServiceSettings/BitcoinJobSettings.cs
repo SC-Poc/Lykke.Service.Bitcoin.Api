@@ -31,5 +31,11 @@ namespace Lykke.Job.Bitcoin.Settings.ServiceSettings
         public FeeType FeeType { get; set; } = FeeType.HalfHourFee;
 
         public RpcClientSettings Rpc { get; set; }
+
+        public string HotWalletAddress { get; set; }
+
+        public int StartFromBlockHeight { get; set; }
+
+        public int IgnoreUnspentOutputsBeforeBlockHeight { get; set; }
     }
 }

@@ -30,6 +30,11 @@ namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Wallet
             return await _storage.GetDataWithContinuationTokenAsync(take, continuationToken);
         }
 
+        public async Task<IEnumerable<IObservableWallet>> GetAllAsync()
+        {
+            return await _storage.GetDataAsync();
+        }
+
         public async Task DeleteAsync(string address)
         {
             if (!await _storage.DeleteIfExistAsync(ObservableWalletEntity.GeneratePartitionKey(address),
