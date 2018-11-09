@@ -19,7 +19,7 @@ namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Wallet
         public static ILastProcessedBlockRepository Create(IReloadingManager<string> connectionString,
             ILogFactory logFactory)
         {
-            const string tableName = "ObservableWallets";
+            const string tableName = "LastProcessedBlocks";
             var table = AzureTableStorage<LastProcessedBlockEntity>.Create(connectionString,
                 tableName, logFactory);
 
