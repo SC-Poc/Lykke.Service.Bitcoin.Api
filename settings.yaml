@@ -36,6 +36,12 @@ Bitcoin:
         settings-key: BitcoinApi-FeeType    
         types:
             - Optional
+    HotWalletAddress:
+        settings-key: BitcoinApi-HotWalletAddress 
+    StartFromBlockHeight:
+        settings-key: BitcoinApi-StartFromBlockHeight 
+    IgnoreUnspentOutputsBeforeBlockHeight:
+        settings-key: BitcoinApi-IgnoreUnspentOutputsBeforeBlockHeight 
     Rpc:
         UserName:
             settings-key: BitcoinApi-RpcUserName
