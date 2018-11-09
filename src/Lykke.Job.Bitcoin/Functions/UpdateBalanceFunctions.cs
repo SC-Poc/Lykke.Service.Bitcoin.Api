@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Lykke.JobTriggers.Triggers.Attributes;
@@ -48,8 +49,7 @@ namespace Lykke.Job.Bitcoin.Functions
                                            _blockHeightSettings.StartFromBlockHeight;
             var lastBlockHeightInBlockchain = await _blockChainProvider.GetLastBlockHeightAsync();
         
-            var startFromBlock =
-                lastProcessedBlockHeight - _confirmationsSettings.MinConfirmationsToDetectOperation * 2;
+            var startFromBlock = lastProcessedBlockHeight - _confirmationsSettings.MinConfirmationsToDetectOperation * 2;
 
             for (int blockHeight = startFromBlock > 0 ? startFromBlock : 1; 
                 blockHeight <= lastBlockHeightInBlockchain; 
@@ -71,13 +71,13 @@ namespace Lykke.Job.Bitcoin.Functions
             var observableAddresses = getObserwableWallets.Result.Select(p => p.Address)
                 .Union(new[] { _hotWalletAddressSettings.HotWalletAddress })
                 .Distinct()
-                .Select(p => BitcoinAddress.Create(p, _network))
+                .Where(p => p != null)
                 .ToHashSet();
             
             foreach (var tx in getBlockData.Result.Block.Transactions)
             {
                 if (tx.Outputs.AsIndexedOutputs()
-                    .Any(p => observableAddresses.Contains(p.TxOut.ScriptPubKey.GetDestinationAddress(_network))))
+                    .Any(p => observableAddresses.Contains(p.TxOut.ScriptPubKey.GetDestinationAddress(_network)?.ToString())))
                 {
                     await UpdateBalancesOfTransactionInvolvedAddresses(tx.GetHash());
                 }
