@@ -79,12 +79,12 @@ namespace Lykke.Job.Bitcoin.Functions
                 if (tx.Outputs.AsIndexedOutputs()
                     .Any(p => observableAddresses.Contains(p.TxOut.ScriptPubKey.GetDestinationAddress(_network)?.ToString())))
                 {
-                    await UpdateBalancesOfTransactionInvolvedAddresses(tx.GetHash());
+                    await UpdateBalancesOfTransactionInvolvedAddresses(tx.GetHash(), observableAddresses);
                 }
             }
         }
 
-        private async Task UpdateBalancesOfTransactionInvolvedAddresses(uint256 txHash)
+        private async Task UpdateBalancesOfTransactionInvolvedAddresses(uint256 txHash, ISet<string> observableAddresses)
         {
             var fullTxData = await _blockChainProvider.GetTransactionAsync(txHash);
 
@@ -95,7 +95,8 @@ namespace Lykke.Job.Bitcoin.Functions
 
             foreach (var address in inputAddresses.Union(outputAddresses)
                 .Distinct()
-                .Where(p => p != null)) // colored address marker
+                .Where(addr => addr != null) // colored address marker
+                .Where(addr => observableAddresses.Contains(addr.ToString()))) 
             {
                 updateAddressBalanceTasks.Add(_walletBalanceService.UpdateBalanceAsync(address.ToString(),
                     _confirmationsSettings.MinConfirmationsToDetectOperation));
