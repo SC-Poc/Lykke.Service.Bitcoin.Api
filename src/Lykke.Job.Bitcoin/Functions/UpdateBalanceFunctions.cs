@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Lykke.JobTriggers.Triggers.Attributes;
@@ -21,7 +20,6 @@ namespace Lykke.Job.Bitcoin.Functions
         private readonly BlockHeightSettings _blockHeightSettings;
         private readonly ILastProcessedBlockRepository _lastProcessedBlockRepository;
         private readonly HotWalletAddressSettings _hotWalletAddressSettings;
-        private readonly Network _network;
 
         public UpdateBalanceFunctions(IObservableWalletRepository observableWalletRepository,
             OperationsConfirmationsSettings confirmationsSettings,
@@ -39,7 +37,6 @@ namespace Lykke.Job.Bitcoin.Functions
             _blockHeightSettings = blockHeightSettings;
             _lastProcessedBlockRepository = lastProcessedBlockRepository;
             _hotWalletAddressSettings = hotWalletAddressSettings;
-            _network = network;
         }
 
         [TimerTrigger("00:03:00")]
@@ -61,48 +58,41 @@ namespace Lykke.Job.Bitcoin.Functions
             }
         }
 
+
         private async Task ProcessBlock(int height)
         {
-            var getBlockData = _blockChainProvider.GetBlockAsync(height);
+            var getTxOutputAddr = _blockChainProvider.GetTxOutputAddresses(height);
             var getObserwableWallets = _observableWalletRepository.GetAllAsync();
 
-            await Task.WhenAll(getBlockData, getObserwableWallets);
+            await Task.WhenAll(getTxOutputAddr, getObserwableWallets);
 
-            var observableAddresses = getObserwableWallets.Result.Select(p => p.Address)
-                .Union(new[] { _hotWalletAddressSettings.HotWalletAddress })
-                .Distinct()
+            var observableAddresses = getObserwableWallets.Result
+                .Select(p => p.Address)
                 .Where(p => p != null)
                 .ToHashSet();
-            
-            foreach (var tx in getBlockData.Result.Block.Transactions)
+
+            var involvedInTxAddresses = new List<string>();
+
+            foreach (var tx in getTxOutputAddr.Result)
             {
-                if (tx.Outputs.AsIndexedOutputs()
-                    .Any(p => observableAddresses.Contains(p.TxOut.ScriptPubKey.GetDestinationAddress(_network)?.ToString())))
+                // filter only lykke related transactions
+                if (tx.destinationAddresses.Any(txOutAddress => txOutAddress == _hotWalletAddressSettings.HotWalletAddress
+                                                                       || observableAddresses.Contains(txOutAddress)))
                 {
-                    await UpdateBalancesOfTransactionInvolvedAddresses(tx.GetHash(), observableAddresses);
+                    //to get tx input we need to load full tx data
+                    involvedInTxAddresses.AddRange(await _blockChainProvider.GetInvolvedInTxAddresses(tx.txHash));
                 }
             }
-        }
 
-        private async Task UpdateBalancesOfTransactionInvolvedAddresses(uint256 txHash, ISet<string> observableAddresses)
-        {
-            var fullTxData = await _blockChainProvider.GetTransactionAsync(txHash);
-
-            var inputAddresses = fullTxData.SpentCoins.Select(p => p.TxOut.ScriptPubKey.GetDestinationAddress(_network));
-            var outputAddresses = fullTxData.ReceivedCoins.Select(p => p.TxOut.ScriptPubKey.GetDestinationAddress(_network));
-
-            var updateAddressBalanceTasks = new List<Task>();
-
-            foreach (var address in inputAddresses.Union(outputAddresses)
-                .Distinct()
-                .Where(addr => addr != null) // colored address marker
-                .Where(addr => observableAddresses.Contains(addr.ToString()))) 
+            // filter other addresses included in tx,
+            // which are not included in observable wallets, along with hot wallet address, to reduce ninja load.
+            foreach (var address in involvedInTxAddresses
+                .Where(addr => observableAddresses.Contains(addr))
+                    .Distinct()) 
+                
             {
-                updateAddressBalanceTasks.Add(_walletBalanceService.UpdateBalanceAsync(address.ToString(),
-                    _confirmationsSettings.MinConfirmationsToDetectOperation));
+                await _walletBalanceService.UpdateBalanceAsync(address, _confirmationsSettings.MinConfirmationsToDetectOperation);
             }
-
-            await Task.WhenAll(updateAddressBalanceTasks);
         }
     }
 }

@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Lykke.Service.Bitcoin.Api.Core.Services.Address;
 using Lykke.Service.Bitcoin.Api.Core.Services.BlockChainReaders;
-using Lykke.Service.Bitcoin.Api.Core.Services.Exceptions;
 using Lykke.Service.Bitcoin.Api.Services.Wallet;
 using NBitcoin;
 using NBitcoin.RPC;
@@ -101,14 +101,42 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
             })).OrderBy(o => o.Timestamp).ToList();
         }
 
-        public Task<GetTransactionResponse> GetTransactionAsync(uint256 txHash)
-        {
-            return _ninjaClient.GetTransaction(txHash);
-        }
 
-        public async Task<GetBlockResponse> GetBlockAsync(int blockHeight)
+        public async Task<IEnumerable<string>> GetInvolvedInTxAddresses(string txHash)
         {
-            return await _ninjaClient.GetBlock(BlockFeature.Parse(blockHeight.ToString()));
+            var fullTxData = await _ninjaClient.GetTransaction(uint256.Parse(txHash));
+
+            var inputAddresses = fullTxData.SpentCoins.Select(p => p.TxOut.ScriptPubKey.GetDestinationAddress(_network));
+            var outputAddresses = fullTxData.ReceivedCoins.Select(p => p.TxOut.ScriptPubKey.GetDestinationAddress(_network));
+
+            return inputAddresses
+                .Union(outputAddresses)
+                .Where(addr => addr != null) // colored address marker
+                .Select(p => p.ToString())
+                .ToList();
+        }
+        
+        public async Task<IEnumerable<(string txHash, IEnumerable<string> destinationAddresses)>> GetTxOutputAddresses(int blockHeight)
+        {
+            var blockResponse =  await _ninjaClient.GetBlock(BlockFeature.Parse(blockHeight.ToString()));
+            if (blockResponse == null)
+            {
+                throw new ArgumentException("Block not found", nameof(blockHeight));
+            }
+
+            var result = new List<(string txHash, IEnumerable<string> destinationAddresses)>();
+
+            foreach (var tx in blockResponse.Block.Transactions)
+            {
+                var destinationAddresses = tx.Outputs.AsIndexedOutputs().Select(p => p.TxOut.ScriptPubKey
+                    .GetDestinationAddress(_network)
+                    ?.ToString())
+                    .Where(p => p != null);
+
+                result.Add((txHash: tx.GetHash().ToString(), destinationAddresses: destinationAddresses));
+            }
+
+            return result;
         }
 
         private async Task<IList<ICoin>> GetAllUnspentOutputs(string address, int minConfirmationCount)

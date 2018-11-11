@@ -14,7 +14,9 @@ namespace Lykke.Service.Bitcoin.Api.Core.Services.BlockChainReaders
         Task<long> GetBalanceSatoshiFromUnspentOutputsAsync(string address, int minConfirmationCount);
         Task<int> GetLastBlockHeightAsync();
         Task<IEnumerable<BitcoinTransaction>> GetTransactionsAfterTxAsync(string address, string afterHash);
-        Task<GetTransactionResponse> GetTransactionAsync(uint256 txHash);
-        Task<GetBlockResponse> GetBlockAsync(int blockHeight);
+        Task<IEnumerable<string>> GetInvolvedInTxAddresses(string txHash);
+
+        Task<IEnumerable<(string txHash, IEnumerable<string> destinationAddresses)>> GetTxOutputAddresses(
+            int blockHeight);
     }
 }
