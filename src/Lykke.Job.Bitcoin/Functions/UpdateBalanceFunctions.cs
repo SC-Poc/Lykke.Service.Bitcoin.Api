@@ -7,7 +7,6 @@ using Lykke.Service.Bitcoin.Api.Core.Services;
 using Lykke.Service.Bitcoin.Api.Core.Services.BlockChainReaders;
 using Lykke.Service.Bitcoin.Api.Services.Operations;
 using Lykke.Service.Bitcoin.Api.Services.Wallet;
-using NBitcoin;
 
 namespace Lykke.Job.Bitcoin.Functions
 {
@@ -27,8 +26,7 @@ namespace Lykke.Job.Bitcoin.Functions
             IWalletBalanceService walletBalanceService, 
             BlockHeightSettings blockHeightSettings,
             ILastProcessedBlockRepository lastProcessedBlockRepository,
-            HotWalletAddressSettings hotWalletAddressSettings, 
-            Network network)
+            HotWalletAddressSettings hotWalletAddressSettings)
         {
             _observableWalletRepository = observableWalletRepository;
             _confirmationsSettings = confirmationsSettings;
