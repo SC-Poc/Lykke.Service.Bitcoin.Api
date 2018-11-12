@@ -34,7 +34,7 @@ namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Wallet
 
         public Task SetLastProcessedBlock(int height)
         {
-            return _storage.InsertOrReplaceAsync(LastProcessedBlockEntity.Create(height));
+            return _storage.InsertOrReplaceAsync(LastProcessedBlockEntity.Create(height), existed => existed.Height < height);
         }
     }
 }
