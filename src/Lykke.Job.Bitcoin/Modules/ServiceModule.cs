@@ -69,6 +69,17 @@ namespace Lykke.Job.Bitcoin.Modules
 
         private void RegisterDetectorServices(ContainerBuilder builder)
         {
+            builder.RegisterInstance(new HotWalletAddressSettings
+            {
+                HotWalletAddress = _settings.HotWalletAddress
+            });
+
+            builder.RegisterInstance(new BlockHeightSettings
+            {
+                IgnoreUnspentOutputsBeforeBlockHeight = _settings.IgnoreUnspentOutputsBeforeBlockHeight,
+                StartFromBlockHeight = _settings.StartFromBlockHeight
+            });
+
             builder.RegisterInstance(new OperationsConfirmationsSettings
             {
                 MinConfirmationsToDetectOperation = _settings.MinConfirmationsToDetectOperation

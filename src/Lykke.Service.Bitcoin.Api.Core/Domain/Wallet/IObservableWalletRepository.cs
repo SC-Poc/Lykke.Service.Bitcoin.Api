@@ -10,6 +10,8 @@ namespace Lykke.Service.Bitcoin.Api.Core.Domain.Wallet
         Task<(IEnumerable<IObservableWallet>, string ContinuationToken)>
             GetAllAsync(int take, string continuationToken);
 
+        Task<IEnumerable<IObservableWallet>> GetAllAsync();
+
         Task DeleteAsync(string address);
         Task<IObservableWallet> GetAsync(string address);
     }

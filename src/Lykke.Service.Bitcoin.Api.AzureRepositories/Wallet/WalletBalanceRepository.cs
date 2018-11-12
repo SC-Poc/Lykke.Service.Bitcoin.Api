@@ -19,7 +19,8 @@ namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Wallet
 
         public Task InsertOrReplaceAsync(IWalletBalance balance)
         {
-            return _storage.InsertOrReplaceAsync(WalletBalanceEntity.Create(balance));
+            return _storage.InsertOrReplaceAsync(WalletBalanceEntity.Create(balance), 
+                existed => existed.UpdatedAtBlockHeight < balance.UpdatedAtBlockHeight);
         }
 
         public Task DeleteIfExistAsync(string address, string assetId)
@@ -31,6 +32,7 @@ namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Wallet
         public async Task<IPaginationResult<IWalletBalance>> GetBalancesAsync(int take, string continuation)
         {
             var result = await _storage.GetDataWithContinuationTokenAsync(take, continuation);
+
             return PaginationResult<IWalletBalance>.Create(result.Entities, result.ContinuationToken);
         }
 

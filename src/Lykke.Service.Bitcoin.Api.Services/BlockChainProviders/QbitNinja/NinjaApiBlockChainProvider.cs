@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Lykke.Service.Bitcoin.Api.Core.Services.Address;
 using Lykke.Service.Bitcoin.Api.Core.Services.BlockChainReaders;
-using Lykke.Service.Bitcoin.Api.Core.Services.Exceptions;
+using Lykke.Service.Bitcoin.Api.Services.Wallet;
 using NBitcoin;
 using NBitcoin.RPC;
 using QBitNinja.Client;
@@ -18,15 +19,17 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
         private readonly Network _network;
         private readonly QBitNinjaClient _ninjaClient;
         private readonly RPCClient _rpcClient;
+        private readonly BlockHeightSettings _blockHeightSettings;
 
         public NinjaApiBlockChainProvider(QBitNinjaClient ninjaClient, RPCClient rpcClient, Network network,
-            IAddressValidator addressValidator)
+            IAddressValidator addressValidator, BlockHeightSettings blockHeightSettings)
         {
             _ninjaClient = ninjaClient;
             _rpcClient = rpcClient;
             _ninjaClient.Colored = true;
             _network = network;
             _addressValidator = addressValidator;
+            _blockHeightSettings = blockHeightSettings;
         }
 
         public Task BroadCastTransactionAsync(Transaction tx)
@@ -98,11 +101,49 @@ namespace Lykke.Service.Bitcoin.Api.Services.BlockChainProviders.QbitNinja
             })).OrderBy(o => o.Timestamp).ToList();
         }
 
+
+        public async Task<IEnumerable<string>> GetInvolvedInTxAddresses(string txHash)
+        {
+            var fullTxData = await _ninjaClient.GetTransaction(uint256.Parse(txHash));
+
+            var inputAddresses = fullTxData.SpentCoins.Select(p => p.TxOut.ScriptPubKey.GetDestinationAddress(_network));
+            var outputAddresses = fullTxData.ReceivedCoins.Select(p => p.TxOut.ScriptPubKey.GetDestinationAddress(_network));
+
+            return inputAddresses
+                .Union(outputAddresses)
+                .Where(addr => addr != null) // colored address marker
+                .Select(p => p.ToString())
+                .ToList();
+        }
+        
+        public async Task<IEnumerable<(string txHash, IEnumerable<string> destinationAddresses)>> GetTxOutputAddresses(int blockHeight)
+        {
+            var blockResponse =  await _ninjaClient.GetBlock(BlockFeature.Parse(blockHeight.ToString()));
+            if (blockResponse == null)
+            {
+                throw new ArgumentException("Block not found", nameof(blockHeight));
+            }
+
+            var result = new List<(string txHash, IEnumerable<string> destinationAddresses)>();
+
+            foreach (var tx in blockResponse.Block.Transactions)
+            {
+                var destinationAddresses = tx.Outputs.AsIndexedOutputs().Select(p => p.TxOut.ScriptPubKey
+                    .GetDestinationAddress(_network)
+                    ?.ToString())
+                    .Where(p => p != null);
+
+                result.Add((txHash: tx.GetHash().ToString(), destinationAddresses: destinationAddresses));
+            }
+
+            return result;
+        }
+
         private async Task<IList<ICoin>> GetAllUnspentOutputs(string address, int minConfirmationCount)
         {
             var response = await _ninjaClient.GetBalance(_addressValidator.GetBitcoinAddress(address), true);
             return response.Operations
-                .Where(o => o.Height >= 549305)
+                .Where(o => o.Height >= _blockHeightSettings.IgnoreUnspentOutputsBeforeBlockHeight)
                 .Where(o => o.Confirmations >= minConfirmationCount)
                 .SelectMany(o => o.ReceivedCoins).ToList();
         }
