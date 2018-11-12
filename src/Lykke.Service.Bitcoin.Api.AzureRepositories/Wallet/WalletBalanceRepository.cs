@@ -20,7 +20,7 @@ namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Wallet
         public Task InsertOrReplaceAsync(IWalletBalance balance)
         {
             return _storage.InsertOrReplaceAsync(WalletBalanceEntity.Create(balance), 
-                existed => existed.UpdatedAtBlockHeight <= balance.UpdatedAtBlockHeight);
+                existed => existed.UpdatedAtBlockHeight < balance.UpdatedAtBlockHeight);
         }
 
         public Task DeleteIfExistAsync(string address, string assetId)
