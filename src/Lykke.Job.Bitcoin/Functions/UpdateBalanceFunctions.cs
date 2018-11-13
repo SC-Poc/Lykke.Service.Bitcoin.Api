@@ -65,7 +65,7 @@ namespace Lykke.Job.Bitcoin.Functions
 
         private async Task ProcessBlock(int height)
         {
-            _log.Info("Processing block", context: height);
+            _log.Info("Processing block", context: new { Height = height });
 
             var getTxOutputAddr = _blockChainProvider.GetTxOutputAddresses(height);
             var getObserwableWallets = _observableWalletRepository.GetAllAsync();
