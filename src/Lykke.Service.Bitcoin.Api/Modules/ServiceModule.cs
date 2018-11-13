@@ -2,7 +2,6 @@
 using System.Net;
 using Autofac;
 using Autofac.Features.AttributeFilters;
-using Lykke.Common.Log;
 using Lykke.Service.Bitcoin.Api.Core.Services;
 using Lykke.Service.Bitcoin.Api.Core.Services.Address;
 using Lykke.Service.Bitcoin.Api.Core.Services.Asset;
@@ -59,20 +58,6 @@ namespace Lykke.Service.Bitcoin.Api.Modules
                 HotWalletAddress = _settings.HotWalletAddress
             });
 
-            builder.Register(p =>
-            {
-                var result = new BlockHeightSettings
-                {
-                    IgnoreUnspentOutputsBeforeBlockHeight = _settings.IgnoreUnspentOutputsBeforeBlockHeight,
-                    StartFromBlockHeight = _settings.StartFromBlockHeight
-                };
-
-                p.Resolve<ILogFactory>().CreateLog(this).Info($"Registering {nameof(BlockHeightSettings)}", context: result);
-
-                return result;
-            })
-                .SingleInstance()
-                .AutoActivate();
             builder.RegisterInstance(new BlockHeightSettings
             {
                 IgnoreUnspentOutputsBeforeBlockHeight = _settings.IgnoreUnspentOutputsBeforeBlockHeight,
