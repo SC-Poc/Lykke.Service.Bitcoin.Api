@@ -10,7 +10,6 @@ namespace Lykke.Service.Bitcoin.Api.Core.Services
         Task UnsubscribeAsync(string address);
         Task<IPaginationResult<IWalletBalance>> GetBalancesAsync(int take, string continuation);
         Task<IWalletBalance> UpdateBtcBalanceAsync(string address, int minConfirmations);
-        Task UpdateBalanceAsync(IObservableWallet wallet, int minConfirmations);
         Task UpdateBalanceAsync(string address, int minConfirmations);
     }
 }
