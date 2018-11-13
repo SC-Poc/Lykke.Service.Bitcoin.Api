@@ -84,7 +84,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.Wallet
             }
             else
             {
-                _log.Info("Address not added to observable list. Updating balance skipped", context: address);
+                _log.Info("Address not added to observable list. Updating balance skipped", context: new { Address = address });
             }
         }
 
