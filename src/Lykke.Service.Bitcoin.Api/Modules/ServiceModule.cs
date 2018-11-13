@@ -64,12 +64,6 @@ namespace Lykke.Service.Bitcoin.Api.Modules
                 IgnoreUnspentOutputsBeforeBlockHeight = _settings.IgnoreUnspentOutputsBeforeBlockHeight,
                 StartFromBlockHeight = _settings.StartFromBlockHeight
             });
-
-            builder.RegisterInstance(new BlockHeightSettings
-            {
-                IgnoreUnspentOutputsBeforeBlockHeight = _settings.IgnoreUnspentOutputsBeforeBlockHeight,
-                StartFromBlockHeight = _settings.StartFromBlockHeight
-            });
         }
 
         private void RegisterNetwork(ContainerBuilder builder)
