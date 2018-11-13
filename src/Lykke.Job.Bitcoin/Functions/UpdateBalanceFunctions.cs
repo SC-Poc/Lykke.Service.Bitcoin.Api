@@ -94,7 +94,7 @@ namespace Lykke.Job.Bitcoin.Functions
                     .Distinct()) 
                 
             {
-                _log.Info("Detected lykke related address in block", context: new { height, address});
+                _log.Info("Detected lykke related address in block", context: new { Height = height, Address = address});
                 await _walletBalanceService.UpdateBalanceAsync(address, _confirmationsSettings.MinConfirmationsToDetectOperation);
             }
         }
