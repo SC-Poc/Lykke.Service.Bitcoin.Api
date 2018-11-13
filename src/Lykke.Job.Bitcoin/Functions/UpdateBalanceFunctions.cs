@@ -84,7 +84,7 @@ namespace Lykke.Job.Bitcoin.Functions
                 if (tx.destinationAddresses.Any(txOutAddress => txOutAddress == _hotWalletAddressSettings.HotWalletAddress
                                                                        || observableAddresses.Contains(txOutAddress)))
                 {
-                    _log.Info("Detected lykke related transaction in block", context: new { height, tx.txHash });
+                    _log.Info("Detected lykke related transaction in block", context: new { Height = height, TransactionHash = tx.txHash, ToAddress = txOutAddress });
                     involvedInTxAddresses.AddRange(await _blockChainProvider.GetInvolvedInTxAddresses(tx.txHash));
                 }
             }
