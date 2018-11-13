@@ -59,20 +59,12 @@ namespace Lykke.Service.Bitcoin.Api.Modules
                 HotWalletAddress = _settings.HotWalletAddress
             });
 
-            builder.Register(p =>
+            builder.RegisterInstance(new BlockHeightSettings
             {
-                var result = new BlockHeightSettings
-                {
-                    IgnoreUnspentOutputsBeforeBlockHeight = _settings.IgnoreUnspentOutputsBeforeBlockHeight,
-                    StartFromBlockHeight = _settings.StartFromBlockHeight
-                };
+                IgnoreUnspentOutputsBeforeBlockHeight = _settings.IgnoreUnspentOutputsBeforeBlockHeight,
+                StartFromBlockHeight = _settings.StartFromBlockHeight
+            });
 
-                p.Resolve<ILogFactory>().CreateLog(this).Info($"Registering {nameof(BlockHeightSettings)}", context: result);
-
-                return result;
-            })
-                .SingleInstance()
-                .AutoActivate();
             builder.RegisterInstance(new BlockHeightSettings
             {
                 IgnoreUnspentOutputsBeforeBlockHeight = _settings.IgnoreUnspentOutputsBeforeBlockHeight,
