@@ -41,6 +41,8 @@ namespace Lykke.Job.Bitcoin.Functions
             _lastProcessedBlockRepository = lastProcessedBlockRepository;
             _hotWalletAddressSettings = hotWalletAddressSettings;
             _log = logFactory.CreateLog(this);
+
+            _log.Info("Starting balance updating", context: blockHeightSettings);
         }
 
         [TimerTrigger("00:03:00")]
@@ -51,35 +53,33 @@ namespace Lykke.Job.Bitcoin.Functions
             var lastBlockHeightInBlockchain = await _blockChainProvider.GetLastBlockHeightAsync();
         
             var startFromBlock = lastProcessedBlockHeight - _confirmationsSettings.MinConfirmationsToDetectOperation * 2;
+            var observableWallets = await _observableWalletRepository.GetAllAsync();
+
+            var observableAddresses = observableWallets
+                .Select(p => p.Address)
+                .Where(p => p != null)
+                .ToHashSet();
 
             for (int blockHeight = startFromBlock > 0 ? startFromBlock : 1; 
                 blockHeight <= lastBlockHeightInBlockchain; 
                 blockHeight++)
             {
-                await ProcessBlock(blockHeight);
+                await ProcessBlock(blockHeight, observableAddresses);
 
                 await _lastProcessedBlockRepository.SetLastProcessedBlock(blockHeight);
             }
         }
 
 
-        private async Task ProcessBlock(int height)
+        private async Task ProcessBlock(int height, ISet<string> observableAddresses)
         {
             _log.Info("Processing block", context: new { Height = height });
 
-            var getTxOutputAddr = _blockChainProvider.GetTxOutputAddresses(height);
-            var getObserwableWallets = _observableWalletRepository.GetAllAsync();
-
-            await Task.WhenAll(getTxOutputAddr, getObserwableWallets);
-
-            var observableAddresses = getObserwableWallets.Result
-                .Select(p => p.Address)
-                .Where(p => p != null)
-                .ToHashSet();
-
+            var txOutputAddresses = await _blockChainProvider.GetTxOutputAddresses(height);
+            
             var involvedInTxAddresses = new List<string>();
 
-            foreach (var tx in getTxOutputAddr.Result)
+            foreach (var tx in txOutputAddresses)
             {
                 if (tx.destinationAddresses.Any(txOutAddress => txOutAddress == _hotWalletAddressSettings.HotWalletAddress
                                                                        || observableAddresses.Contains(txOutAddress)))
@@ -92,7 +92,6 @@ namespace Lykke.Job.Bitcoin.Functions
             foreach (var address in involvedInTxAddresses
                 .Where(addr => observableAddresses.Contains(addr))
                     .Distinct()) 
-                
             {
                 _log.Info("Detected lykke related address in block", context: new { Height = height, Address = address});
                 await _walletBalanceService.UpdateBalanceAsync(address, _confirmationsSettings.MinConfirmationsToDetectOperation);
