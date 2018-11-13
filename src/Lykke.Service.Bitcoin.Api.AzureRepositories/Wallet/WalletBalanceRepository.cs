@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using AzureStorage;
 using AzureStorage.Tables;
+using Common.Log;
 using Lykke.Common.Log;
 using Lykke.Service.Bitcoin.Api.Core.Domain.Wallet;
 using Lykke.Service.Bitcoin.Api.Core.Services.Pagination;
@@ -11,16 +12,28 @@ namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Wallet
     public class WalletBalanceRepository : IWalletBalanceRepository
     {
         private readonly INoSQLTableStorage<WalletBalanceEntity> _storage;
+        private readonly ILog _log;
 
-        private WalletBalanceRepository(INoSQLTableStorage<WalletBalanceEntity> storage)
+        private WalletBalanceRepository(INoSQLTableStorage<WalletBalanceEntity> storage, ILogFactory logFactory)
         {
             _storage = storage;
+            _log = logFactory.CreateLog(this);
         }
 
         public Task InsertOrReplaceAsync(IWalletBalance balance)
         {
-            return _storage.InsertOrReplaceAsync(WalletBalanceEntity.Create(balance), 
-                existed => existed.UpdatedAtBlockHeight < balance.UpdatedAtBlockHeight);
+            return _storage.InsertOrReplaceAsync(WalletBalanceEntity.Create(balance),
+                existed =>
+                {
+                    var needToUpdate = existed.UpdatedAtBlockHeight < balance.UpdatedAtBlockHeight;
+
+                    if (needToUpdate)
+                    {
+                        _log.Info("Updating wallet balance in db", context: balance);
+                    }
+
+                    return existed.UpdatedAtBlockHeight < balance.UpdatedAtBlockHeight;
+                });
         }
 
         public Task DeleteIfExistAsync(string address, string assetId)
@@ -43,7 +56,7 @@ namespace Lykke.Service.Bitcoin.Api.AzureRepositories.Wallet
             var table = AzureTableStorage<WalletBalanceEntity>.Create(connectionString,
                 tableName, logFactory);
 
-            return new WalletBalanceRepository(table);
+            return new WalletBalanceRepository(table, logFactory);
         }
     }
 }

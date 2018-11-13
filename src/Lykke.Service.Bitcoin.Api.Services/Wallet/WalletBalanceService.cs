@@ -65,20 +65,27 @@ namespace Lykke.Service.Bitcoin.Api.Services.Wallet
             return null;
         }
 
-        public async Task UpdateBalanceAsync(IObservableWallet wallet, int minConfirmations)
+        private async Task UpdateBalanceAsync(IObservableWallet wallet, int minConfirmations)
         {
-            if (wallet != null)
-            {
-                var lastBlock = await _blockChainProvider.GetLastBlockHeightAsync();
-                await UpdateBitcoinBalance(wallet, lastBlock, minConfirmations);
-                await UpdateColoredBalance(wallet, lastBlock, minConfirmations);
-            }
+            var lastBlock = await _blockChainProvider.GetLastBlockHeightAsync();
+
+            _log.Info("Updating balance of address", context: new { Address = wallet.Address, Height = lastBlock});
+
+            await UpdateBitcoinBalance(wallet, lastBlock, minConfirmations);
+            await UpdateColoredBalance(wallet, lastBlock, minConfirmations);
         }
 
         public async Task UpdateBalanceAsync(string address, int minConfirmations)
         {
             var wallet = await _observableWalletRepository.GetAsync(address);
-            await UpdateBalanceAsync(wallet, minConfirmations);
+            if (wallet != null)
+            {
+                await UpdateBalanceAsync(wallet, minConfirmations);
+            }
+            else
+            {
+                _log.Info("Address not added to observable list. Updating balance skipped", context: new { Address = address });
+            }
         }
 
         private async Task<IWalletBalance> UpdateBitcoinBalance(IObservableWallet wallet, int height,
@@ -86,7 +93,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.Wallet
         {
             var balance =
                 await _blockChainProvider.GetBalanceSatoshiFromUnspentOutputsAsync(wallet.Address, minConfirmations);
-
+            
             if (balance != 0)
             {
                 var walletBalanceEntity =
@@ -123,6 +130,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.Wallet
 
                 var balance = coinsGroup.Sum(o => o.Amount.Quantity);
                 var walletBalanceEntity = WalletBalance.Create(wallet.Address, balance, height, coloredAsset.AssetId);
+
                 await _balanceRepository.InsertOrReplaceAsync(walletBalanceEntity);
             }
         }
