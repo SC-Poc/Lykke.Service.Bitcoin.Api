@@ -2,6 +2,7 @@
 using System.Net;
 using Autofac;
 using Autofac.Features.AttributeFilters;
+using Lykke.Common.Log;
 using Lykke.Service.Bitcoin.Api.Core.Services;
 using Lykke.Service.Bitcoin.Api.Core.Services.Address;
 using Lykke.Service.Bitcoin.Api.Core.Services.Asset;
