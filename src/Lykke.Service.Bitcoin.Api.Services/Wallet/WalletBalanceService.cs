@@ -69,7 +69,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.Wallet
         {
             var lastBlock = await _blockChainProvider.GetLastBlockHeightAsync();
 
-            _log.Info("Updating balance of address", context: new { wallet.Address, height = lastBlock});
+            _log.Info("Updating balance of address", context: new { Address = wallet.Address, Height = lastBlock});
 
             await UpdateBitcoinBalance(wallet, lastBlock, minConfirmations);
             await UpdateColoredBalance(wallet, lastBlock, minConfirmations);
