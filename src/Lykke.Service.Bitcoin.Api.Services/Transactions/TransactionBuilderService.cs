@@ -174,8 +174,17 @@ namespace Lykke.Service.Bitcoin.Api.Services.Transactions
 
             var requiredBalance = input.Amount + (includeFee ? Money.Zero : calculatedFee);
 
+            if (addressBalance < requiredBalance)
+                throw new BusinessException(
+                    $"The sum of total applicable outputs is less than the required : {requiredBalance} satoshis.",
+                    ErrorCode.NotEnoughFundsAvailable);
+
             if (includeFee)
             {
+                if (calculatedFee > input.Amount)
+                    throw new BusinessException(
+                        $"The sum of total applicable outputs is less than the required fee:{calculatedFee} satoshis.",
+                        ErrorCode.BalanceIsLessThanFee);
                 builder.SubtractFees();
             }
 
