@@ -143,6 +143,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
             {
                 return BadRequest(BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
             }
+
             return Ok(new BuildTransactionResponse
             {
                 TransactionContext = tx.ToJson(_network)
