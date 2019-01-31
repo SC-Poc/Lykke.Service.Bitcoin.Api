@@ -49,7 +49,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.Transactions
             var coins = await GetUnspentCoins(input);
 
             var addressBalance = coins.Sum(o => o.Amount);
-            var sendAmount = outputs.Sum(o => o.Amount); ;
+            var sendAmount = outputs.Sum(o => o.Amount);
             var sentFees = Money.Zero;
 
             builder.SetChange(input.Address);
@@ -171,9 +171,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.Transactions
                    .SetChange(input.Address);
 
             var calculatedFee = await _feeService.CalcFeeForTransactionAsync(builder) - sentFees;
-
-            var requiredBalance = input.Amount + (includeFee ? Money.Zero : calculatedFee);
-
+            
             if (includeFee)
             {
                 builder.SubtractFees();
