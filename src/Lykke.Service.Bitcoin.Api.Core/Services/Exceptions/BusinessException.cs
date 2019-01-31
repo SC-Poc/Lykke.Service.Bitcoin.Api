@@ -21,6 +21,7 @@ namespace Lykke.Service.Bitcoin.Api.Core.Services.Exceptions
         CantFindAddressToSignTx = 1,
         TransactionConcurrentInputsProblem = 2,
         BadInputParameter = 3,
+        NotEnoughFundsAvailable = 4,
         OperationNotFound = 5,
         WalletNotFound = 7,
         SignError = 9,
