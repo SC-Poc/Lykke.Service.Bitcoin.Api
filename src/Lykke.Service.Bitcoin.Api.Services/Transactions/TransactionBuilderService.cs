@@ -64,7 +64,11 @@ namespace Lykke.Service.Bitcoin.Api.Services.Transactions
             builder.AddCoins(coins);
 
             var calculatedFee = await _feeService.CalcFeeForTransactionAsync(builder) - sentFees;
- 
+
+            var requiredBalance = sendAmount + calculatedFee;           
+
+            if (addressBalance < requiredBalance)
+                throw new BusinessException($"The sum of total applicable outputs is less than the required : {requiredBalance} satoshis.", ErrorCode.NotEnoughFundsAvailable);
 
             if (calculatedFee > 0)
                 builder.SendFees(calculatedFee);
@@ -94,7 +98,11 @@ namespace Lykke.Service.Bitcoin.Api.Services.Transactions
                 builder.AddCoins(coins);
 
                 var addressBalance = coins.Sum(o => o.Amount);
-                
+
+                if (addressBalance < operationBitcoinInput.Amount)
+                    throw new BusinessException($"The sum of total applicable outputs is less than the required : {operationBitcoinInput.Amount.Satoshi} satoshis.",
+                        ErrorCode.NotEnoughFundsAvailable);
+
                 // send change to source address
                 var change = addressBalance - operationBitcoinInput.Amount;
                 if (change < new TxOut(Money.Zero, operationBitcoinInput.Address).GetDustThreshold(builder.StandardTransactionPolicy.MinRelayTxFee))
@@ -109,6 +117,13 @@ namespace Lykke.Service.Bitcoin.Api.Services.Transactions
             builder.Send(output.Address, sendAmount);
 
             var calculatedFee = await _feeService.CalcFeeForTransactionAsync(builder) - sentFees;
+
+            var requiredBalance = sendAmount;
+
+            if (totalBalance < requiredBalance)
+                throw new BusinessException(
+                    $"The sum of total applicable outputs is less than the required : {requiredBalance} satoshis.",
+                    ErrorCode.NotEnoughFundsAvailable);
 
             if (calculatedFee > sendAmount)
                 throw new BusinessException(
@@ -138,6 +153,10 @@ namespace Lykke.Service.Bitcoin.Api.Services.Transactions
             builder.AddCoins(coins);
 
             var addressBalance = coins.Sum(o => o.Amount);
+
+            if (addressBalance < input.Amount)
+                throw new BusinessException($"The sum of total applicable outputs is less than the required : {input.Amount.Satoshi} satoshis.",
+                    ErrorCode.NotEnoughFundsAvailable);
 
             var sentFees = Money.Zero;
 
