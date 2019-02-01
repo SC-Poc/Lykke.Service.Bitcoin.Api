@@ -67,25 +67,38 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
             if (await _operationEventRepository.ExistAsync(request.OperationId, OperationEventType.Broadcasted))
                 return Conflict();
 
-            var tx = await _operationService.GetOrBuildTransferTransactionAsync(request.OperationId, new List<OperationInput>
-                {
-                    new OperationInput
+            BuiltTransactionInfo tx;
+
+            try
+            {
+                tx = await _operationService.GetOrBuildTransferTransactionAsync(request.OperationId, new List<OperationInput>
                     {
-                        Address = request.FromAddress,
-                        AddressContext = request.FromAddressContext?.DeserializeJson<AddressContextContract>()?.PubKey,
-                        Amount = amountSatoshi
-                    }
-                },
-                new List<OperationOutput>
-                {
-                    new OperationOutput
+                        new OperationInput
+                        {
+                            Address = request.FromAddress,
+                            AddressContext = request.FromAddressContext?.DeserializeJson<AddressContextContract>()?.PubKey,
+                            Amount = amountSatoshi
+                        }
+                    },
+                    new List<OperationOutput>
                     {
-                        Address = request.ToAddress,
-                        Amount = amountSatoshi
-                    }
-                },
-                OperationType.Single,
-                request.AssetId, request.IncludeFee);
+                        new OperationOutput
+                        {
+                            Address = request.ToAddress,
+                            Amount = amountSatoshi
+                        }
+                    },
+                    OperationType.Single,
+                    request.AssetId, request.IncludeFee);
+            }
+            catch (NotEnoughFundsException)
+            {
+                return BadRequest(BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
+            }
+            catch (BusinessException e) when (e.Code != ErrorCode.NotEnoughFundsAvailable)
+            {
+                return BadRequest(BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
+            }
 
 
             return Ok(new BuildTransactionResponse
