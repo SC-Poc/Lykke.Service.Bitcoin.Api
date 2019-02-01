@@ -133,6 +133,8 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
             if (request.OperationId == Guid.Empty)
                 throw new ValidationApiException("Invalid operation id (GUID)");
 
+            if (await _operationEventRepository.ExistAsync(request.OperationId, OperationEventType.Broadcasted))
+                return Conflict();
 
             BuiltTransactionInfo tx;
             try
@@ -189,6 +191,9 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
 
             if (request.OperationId == Guid.Empty)
                 throw new ValidationApiException("Invalid operation id (GUID)");
+
+            if (await _operationEventRepository.ExistAsync(request.OperationId, OperationEventType.Broadcasted))
+                return Conflict();
 
             BuiltTransactionInfo tx;
             try
