@@ -60,6 +60,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.TransactionOutputs
             {
                 var set = new HashSet<OutPoint>(blockchainOutputs.Select(x => x.Outpoint));
                 var internalSavedOutputs = (await _internalOutputRepository.GetOutputsAsync(address))
+                    .Where(o => !string.IsNullOrEmpty(o.TransactionHash))
                     .Where(o => !set.Contains(new OutPoint(uint256.Parse(o.TransactionHash), o.N)));
 
                 return blockchainOutputs.Concat(internalSavedOutputs.Select(o =>
