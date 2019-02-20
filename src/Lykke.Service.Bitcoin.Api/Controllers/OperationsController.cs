@@ -14,8 +14,10 @@ using Lykke.Service.Bitcoin.Api.Core.Services.Address;
 using Lykke.Service.Bitcoin.Api.Core.Services.Broadcast;
 using Lykke.Service.Bitcoin.Api.Core.Services.Exceptions;
 using Lykke.Service.Bitcoin.Api.Core.Services.Operation;
+using Lykke.Service.Bitcoin.Api.Core.Services.Transactions;
 using Lykke.Service.Bitcoin.Api.Helpers;
 using Lykke.Service.Bitcoin.Api.Models;
+using Lykke.Service.BlockchainApi.Contract;
 using Lykke.Service.BlockchainApi.Contract.Transactions;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -65,25 +67,38 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
             if (await _operationEventRepository.ExistAsync(request.OperationId, OperationEventType.Broadcasted))
                 return Conflict();
 
-            var tx = await _operationService.GetOrBuildTransferTransactionAsync(request.OperationId, new List<OperationInput>
-                {
-                    new OperationInput
+            BuiltTransactionInfo tx;
+
+            try
+            {
+                tx = await _operationService.GetOrBuildTransferTransactionAsync(request.OperationId, new List<OperationInput>
                     {
-                        Address = request.FromAddress,
-                        AddressContext = request.FromAddressContext?.DeserializeJson<AddressContextContract>()?.PubKey,
-                        Amount = amountSatoshi
-                    }
-                },
-                new List<OperationOutput>
-                {
-                    new OperationOutput
+                        new OperationInput
+                        {
+                            Address = request.FromAddress,
+                            AddressContext = request.FromAddressContext?.DeserializeJson<AddressContextContract>()?.PubKey,
+                            Amount = amountSatoshi
+                        }
+                    },
+                    new List<OperationOutput>
                     {
-                        Address = request.ToAddress,
-                        Amount = amountSatoshi
-                    }
-                },
-                OperationType.Single,
-                request.AssetId, request.IncludeFee);
+                        new OperationOutput
+                        {
+                            Address = request.ToAddress,
+                            Amount = amountSatoshi
+                        }
+                    },
+                    OperationType.Single,
+                    request.AssetId, request.IncludeFee);
+            }
+            catch (NotEnoughFundsException)
+            {
+                return BadRequest(BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
+            }
+            catch (BusinessException e) when (e.Code == ErrorCode.NotEnoughFundsAvailable)
+            {
+                return BadRequest(BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
+            }
 
 
             return Ok(new BuildTransactionResponse
@@ -118,18 +133,31 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
             if (request.OperationId == Guid.Empty)
                 throw new ValidationApiException("Invalid operation id (GUID)");
 
+            if (await _operationEventRepository.ExistAsync(request.OperationId, OperationEventType.Broadcasted))
+                return Conflict();
 
-            var tx = await _operationService.GetOrBuildTransferTransactionAsync(request.OperationId, inputs,
-                new List<OperationOutput>
-                {
-                    new OperationOutput
+            BuiltTransactionInfo tx;
+            try
+            {
+                tx = await _operationService.GetOrBuildTransferTransactionAsync(request.OperationId, inputs,
+                    new List<OperationOutput>
                     {
-                        Address = request.ToAddress
-                    }
-                },
-                OperationType.ManyInputs,
-                request.AssetId, true);
-
+                        new OperationOutput
+                        {
+                            Address = request.ToAddress
+                        }
+                    },
+                    OperationType.ManyInputs,
+                    request.AssetId, true);
+            }
+            catch (NotEnoughFundsException)
+            {
+                return BadRequest(BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
+            }
+            catch (BusinessException e) when (e.Code == ErrorCode.NotEnoughFundsAvailable)
+            {
+                return BadRequest(BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
+            }
 
             return Ok(new BuildTransactionResponse
             {
@@ -164,16 +192,30 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
             if (request.OperationId == Guid.Empty)
                 throw new ValidationApiException("Invalid operation id (GUID)");
 
-            var tx = await _operationService.GetOrBuildTransferTransactionAsync(request.OperationId, new List<OperationInput>
-                {
-                    new OperationInput
-                    {
-                        Address = request.FromAddress,
-                        AddressContext = request.FromAddressContext?.DeserializeJson<AddressContextContract>()?.PubKey
-                    }
-                },
-                outputs, OperationType.ManyOutputs, request.AssetId, false);
+            if (await _operationEventRepository.ExistAsync(request.OperationId, OperationEventType.Broadcasted))
+                return Conflict();
 
+            BuiltTransactionInfo tx;
+            try
+            {
+                tx = await _operationService.GetOrBuildTransferTransactionAsync(request.OperationId, new List<OperationInput>
+                    {
+                        new OperationInput
+                        {
+                            Address = request.FromAddress,
+                            AddressContext = request.FromAddressContext?.DeserializeJson<AddressContextContract>()?.PubKey
+                        }
+                    },
+                    outputs, OperationType.ManyOutputs, request.AssetId, false);
+            }
+            catch (NotEnoughFundsException)
+            {
+                return BadRequest(BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
+            }
+            catch (BusinessException e) when (e.Code == ErrorCode.NotEnoughFundsAvailable)
+            {
+                return BadRequest(BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.NotEnoughBalance));
+            }
 
             return Ok(new BuildTransactionResponse
             {
