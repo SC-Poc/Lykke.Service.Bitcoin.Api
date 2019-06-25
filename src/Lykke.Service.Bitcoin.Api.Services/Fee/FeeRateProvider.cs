@@ -1,33 +1,25 @@
 ﻿using System.Threading.Tasks;
-using Flurl;
-using Flurl.Http;
 using Lykke.Service.Bitcoin.Api.Core.Services.Fee;
+using NBitcoin.RPC;
 
 namespace Lykke.Service.Bitcoin.Api.Services.Fee
 {
     public class FeeRateProvider : IFeeRateProvider
     {
-        private const string Url = "https://bitcoinfees.21.co/api/v1";
-        private readonly FeeType _feeType;
+        private readonly RPCClient _rpcClient;
+        private readonly int _confirmationTarget;
 
-        public FeeRateProvider(FeeRateSettings settings)
+        public FeeRateProvider(RPCClient rpcClient, FeeRateSettings feeRateSettings)
         {
-            _feeType = settings.FeeType;
+            _rpcClient = rpcClient;
+            _confirmationTarget = feeRateSettings.FeeConfirmationTargetInBlocks;
         }
 
 
         public async Task<int> GetExternalFeeRateAsync()
         {
-            var response = await Url.AppendPathSegment("fees/recommended").GetJsonAsync<FeeResult>();
-            switch (_feeType)
-            {
-                case FeeType.FastestFee:
-                    return response.FastestFee;
-                case FeeType.HalfHourFee:
-                    return response.HalfHourFee;
-                default:
-                    return response.HourFee;
-            }
+            var resp = await _rpcClient.EstimateSmartFeeAsync(_confirmationTarget);
+            return (int) resp.FeeRate.SatoshiPerByte;
         }
     }
 }

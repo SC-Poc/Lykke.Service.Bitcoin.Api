@@ -101,7 +101,7 @@ namespace Lykke.Job.Bitcoin.Modules
                 MinFeeRatePerByte = _settings.MinFeePerByte,
                 MaxFeeRatePerByte = _settings.MaxFeePerByte,
                 DefaultFeeRatePerByte = _settings.FeePerByte,
-                FeeType = _settings.FeeType
+                FeeConfirmationTargetInBlocks = _settings.FeeConfirmationTargetInBlocks
             });
 
             builder.RegisterType<FeeRateFacade>()
