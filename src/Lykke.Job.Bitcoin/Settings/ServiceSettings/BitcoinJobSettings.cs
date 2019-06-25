@@ -28,7 +28,7 @@ namespace Lykke.Job.Bitcoin.Settings.ServiceSettings
         public int MinFeePerByte { get; set; } = 1;
 
         [Optional]
-        public FeeType FeeType { get; set; } = FeeType.HalfHourFee;
+        public int FeeConfirmationTargetInBlocks { get; set; } = 3;
 
         public RpcClientSettings Rpc { get; set; }
 

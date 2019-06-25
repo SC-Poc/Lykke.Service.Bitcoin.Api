@@ -6,7 +6,6 @@
 
         public int MinFeeRatePerByte { get; set; }
         public int MaxFeeRatePerByte { get; set; }
-
-        public FeeType FeeType { get; set; }
+        public int FeeConfirmationTargetInBlocks { get; set; }
     }
 }
