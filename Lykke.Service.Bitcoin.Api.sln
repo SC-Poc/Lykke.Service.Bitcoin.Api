@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2009
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28917.181
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lykke.Service.Bitcoin.Api", "src\Lykke.Service.Bitcoin.Api\Lykke.Service.Bitcoin.Api.csproj", "{E414FDB9-FEEA-4CD0-9BBA-D1541601DF29}"
 EndProject
@@ -27,6 +27,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4. Tests", "4. Tests", "{8F9036B1-5106-4C69-B2D2-B78EE52687A0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lykke.Job.Bitcoin", "src\Lykke.Job.Bitcoin\Lykke.Job.Bitcoin.csproj", "{026FAF17-7A2E-4DD6-B114-4468AF8A7EC8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ColoredBtcCLI", "src\ColoredBtcCLI\ColoredBtcCLI.csproj", "{B5AB6A80-298C-47F3-B244-69A6EAB29073}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,6 +60,10 @@ Global
 		{026FAF17-7A2E-4DD6-B114-4468AF8A7EC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{026FAF17-7A2E-4DD6-B114-4468AF8A7EC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{026FAF17-7A2E-4DD6-B114-4468AF8A7EC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5AB6A80-298C-47F3-B244-69A6EAB29073}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5AB6A80-298C-47F3-B244-69A6EAB29073}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5AB6A80-298C-47F3-B244-69A6EAB29073}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5AB6A80-298C-47F3-B244-69A6EAB29073}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
