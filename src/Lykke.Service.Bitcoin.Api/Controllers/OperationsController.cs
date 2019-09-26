@@ -246,6 +246,10 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
             {
                 return NoContent();
             }
+            catch (BusinessException e) when (e.Code == ErrorCode.MissedInput)
+            {
+                return BadRequest(BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.BuildingShouldBeRepeated));
+            }
 
             return Ok();
         }
