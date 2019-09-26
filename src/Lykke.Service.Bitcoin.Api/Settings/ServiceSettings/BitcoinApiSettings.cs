@@ -1,5 +1,5 @@
-﻿using Lykke.Service.Bitcoin.Api.Core.Services.BlockChainReaders;
-using Lykke.Service.Bitcoin.Api.Core.Services.Fee;
+﻿using System;
+using System.Collections.Generic;
 using Lykke.Service.Bitcoin.Api.Services.BlockChainProviders;
 using Lykke.SettingsReader.Attributes;
 
@@ -32,5 +32,8 @@ namespace Lykke.Service.Bitcoin.Api.Settings.ServiceSettings
         public int IgnoreUnspentOutputsBeforeBlockHeight { get; set; }
 
         public string HotWalletAddress { get; set; }
+
+        [Optional]
+        public IReadOnlyList<Guid> OperationsToForceRebuild { get; set; }
     }
 }
