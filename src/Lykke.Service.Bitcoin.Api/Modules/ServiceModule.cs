@@ -42,6 +42,8 @@ namespace Lykke.Service.Bitcoin.Api.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterInstance(_settings);
+
             RegisterNetwork(builder);
             RegisterFeeServices(builder);
             RegisterAddressValidatorServices(builder);
