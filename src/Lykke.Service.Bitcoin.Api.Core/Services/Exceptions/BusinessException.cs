@@ -31,6 +31,7 @@ namespace Lykke.Service.Bitcoin.Api.Core.Services.Exceptions
         TransactionAlreadyBroadcasted = 13,
         BlockChainApiError = 14,
         BroadcastError = 15,
-        Conflict = 16
+        Conflict = 16,
+        MissedInput = 17
     }
 }

@@ -11,6 +11,7 @@ using Lykke.Service.Bitcoin.Api.Core.Services.Broadcast;
 using Lykke.Service.Bitcoin.Api.Core.Services.Exceptions;
 using Lykke.Service.Bitcoin.Api.Core.Services.TransactionOutputs;
 using NBitcoin;
+using NBitcoin.RPC;
 
 namespace Lykke.Service.Bitcoin.Api.Services.Broadcast
 {
@@ -63,7 +64,14 @@ namespace Lykke.Service.Bitcoin.Api.Services.Broadcast
 
             var lastBlockHeight = await _blockChainProvider.GetLastBlockHeightAsync();
 
-            await _blockChainProvider.BroadCastTransactionAsync(tx);
+            try
+            {
+                await _blockChainProvider.BroadCastTransactionAsync(tx);
+            }
+            catch (RPCException e) when (e.RPCCode == RPCErrorCode.RPC_TRANSACTION_ERROR && e.Message == "Missing inputs")
+            {
+                throw new BusinessException("There are missed inputs in the transaction", ErrorCode.MissedInput, e);
+            }
 
             await _observableOperationRepository.InsertOrReplaceAsync(ObervableOperation.Create(operation,
                 BroadcastStatus.InProgress, hash, lastBlockHeight));
