@@ -42,6 +42,10 @@ Bitcoin:
         settings-key: BitcoinApi-StartFromBlockHeight 
     IgnoreUnspentOutputsBeforeBlockHeight:
         settings-key: BitcoinApi-IgnoreUnspentOutputsBeforeBlockHeight 
+    OperationsToForceRebuild:
+        settings-key: BitcoinApi-OperationsToForceRebuild
+        types:
+            - JsonArray
     Rpc:
         UserName:
             settings-key: BitcoinApi-RpcUserName
