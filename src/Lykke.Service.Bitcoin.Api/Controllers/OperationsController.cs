@@ -17,6 +17,7 @@ using Lykke.Service.Bitcoin.Api.Core.Services.Operation;
 using Lykke.Service.Bitcoin.Api.Core.Services.Transactions;
 using Lykke.Service.Bitcoin.Api.Helpers;
 using Lykke.Service.Bitcoin.Api.Models;
+using Lykke.Service.Bitcoin.Api.Settings.ServiceSettings;
 using Lykke.Service.BlockchainApi.Contract;
 using Lykke.Service.BlockchainApi.Contract.Transactions;
 using Microsoft.AspNetCore.Mvc;
@@ -29,6 +30,7 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
     {        
         private readonly IBroadcastService _broadcastService;
         private readonly Network _network;
+        private readonly BitcoinApiSettings _settings;
         private readonly IObservableOperationService _observableOperationService;
         private readonly IOperationEventRepository _operationEventRepository;
         private readonly IOperationService _operationService;
@@ -36,14 +38,17 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
 
         public OperationsController(IOperationService operationService,            
             IBroadcastService broadcastService,
-            IObservableOperationService observableOperationService, IOperationEventRepository operationEventRepository,
-            Network network)
+            IObservableOperationService observableOperationService, 
+            IOperationEventRepository operationEventRepository,
+            Network network,
+            BitcoinApiSettings settings)
         {
             _operationService = operationService;            
             _broadcastService = broadcastService;
             _observableOperationService = observableOperationService;
             _operationEventRepository = operationEventRepository;
             _network = network;
+            _settings = settings;
         }
 
         [HttpPost("api/transactions/single")]
@@ -233,6 +238,11 @@ namespace Lykke.Service.Bitcoin.Api.Controllers
         public async Task<IActionResult> BroadcastTransaction([FromBody] BroadcastTransactionRequest request)
         {
             if (request == null) throw new ValidationApiException("Unable deserialize request");
+
+            if (_settings.OperationsToForceRebuild?.Contains(request.OperationId) == true)
+            {
+                return BadRequest(BlockchainErrorResponse.FromKnownError(BlockchainErrorCode.BuildingShouldBeRepeated));
+            }
 
             try
             {

@@ -11,6 +11,7 @@ using Lykke.Service.Bitcoin.Api.Core.Services.Broadcast;
 using Lykke.Service.Bitcoin.Api.Core.Services.Exceptions;
 using Lykke.Service.Bitcoin.Api.Core.Services.TransactionOutputs;
 using NBitcoin;
+using NBitcoin.RPC;
 
 namespace Lykke.Service.Bitcoin.Api.Services.Broadcast
 {
