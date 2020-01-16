@@ -8,6 +8,7 @@ using Lykke.Service.Bitcoin.Api.Core.Services.Fee;
 using Lykke.Service.Bitcoin.Api.Core.Services.Operation;
 using Lykke.Service.Bitcoin.Api.Core.Services.TransactionOutputs;
 using Lykke.Service.Bitcoin.Api.Core.Services.Transactions;
+using Lykke.Service.Bitcoin.Api.Services.Operations;
 using NBitcoin;
 
 namespace Lykke.Service.Bitcoin.Api.Services.Transactions
@@ -17,19 +18,22 @@ namespace Lykke.Service.Bitcoin.Api.Services.Transactions
         private readonly IFeeService _feeService;
         private readonly ITransactionOutputsService _transactionOutputsService;
         private readonly IAddressValidator _addressValidator;
+        private readonly OperationsConfirmationsSettings _confirmationsSettings;
 
         public TransactionBuilderService(ITransactionOutputsService transactionOutputsService,
             IAddressValidator addressValidator,
-            IFeeService feeService)
+            IFeeService feeService,
+            OperationsConfirmationsSettings confirmationsSettings)
         {
             _transactionOutputsService = transactionOutputsService;
             _addressValidator = addressValidator;
             _feeService = feeService;
+            _confirmationsSettings = confirmationsSettings;
         }
 
         private async Task<IList<Coin>> GetUnspentCoins(OperationBitcoinInput input)
         {
-            var coins = (await _transactionOutputsService.GetUnspentOutputsAsync(input.Address.ToString())).ToList();
+            var coins = (await _transactionOutputsService.GetUnspentOutputsAsync(input.Address.ToString(), _confirmationsSettings.MinConfirmationsToDetectOperation)).ToList();
             if (input.Redeem != null)
                 coins = coins.Select(o => o.ToScriptCoin(input.Redeem)).Cast<Coin>().ToList();
             return coins;
