@@ -14,6 +14,9 @@ namespace Lykke.Service.Bitcoin.Api.Settings.ServiceSettings
         public string NinjaApiUrl { get; set; }
 
         [Optional]
+        public int MinConfirmationsToDetectOperation { get; set; } = 3;
+
+        [Optional]
         public int FeePerByte { get; set; } = 1;
 
         [Optional]

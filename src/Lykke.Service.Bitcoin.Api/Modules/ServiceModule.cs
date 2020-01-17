@@ -113,6 +113,10 @@ namespace Lykke.Service.Bitcoin.Api.Modules
 
         private void RegisterTransactionBuilderServices(ContainerBuilder builder)
         {
+            builder.RegisterInstance(new OperationsConfirmationsSettings
+            {
+                MinConfirmationsToDetectOperation = _settings.MinConfirmationsToDetectOperation
+            });
             builder.RegisterType<TransactionBuilderService>().As<ITransactionBuilderService>();
             builder.RegisterType<OperationService>().As<IOperationService>();
         }

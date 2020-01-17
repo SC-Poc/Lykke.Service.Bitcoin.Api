@@ -26,7 +26,7 @@ namespace Lykke.Service.Bitcoin.Api.Services.TransactionOutputs
             _internalOutputRepository = internalOutputRepository;
         }
 
-        public async Task<IEnumerable<Coin>> GetUnspentOutputsAsync(string address, int confirmationsCount = 0)
+        public async Task<IEnumerable<Coin>> GetUnspentOutputsAsync(string address, int confirmationsCount)
         {
             var blockchainOutputs = await _blockChainProvider.GetUnspentOutputsAsync(address, confirmationsCount);
 
