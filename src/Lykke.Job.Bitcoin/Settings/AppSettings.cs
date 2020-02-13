@@ -9,8 +9,6 @@ namespace Lykke.Job.Bitcoin.Settings
 
         public SlackNotificationsSettings SlackNotifications { get; set; }
 
-        public AssetsServiceClientSettings AssetsServiceClient { get; set; }
-
         [Optional] public MonitoringServiceClientSettings MonitoringServiceClient { get; set; }
     }
 }

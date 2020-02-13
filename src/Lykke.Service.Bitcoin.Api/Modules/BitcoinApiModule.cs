@@ -3,6 +3,7 @@ using Autofac;
 using Lykke.Sdk;
 using Lykke.Service.Assets.Client;
 using Lykke.Service.Bitcoin.Api.Lifetime;
+using Lykke.Service.Bitcoin.Api.Services;
 using Lykke.Service.Bitcoin.Api.Settings;
 using Lykke.SettingsReader;
 
@@ -22,8 +23,9 @@ namespace Lykke.Service.Bitcoin.Api.Modules
             builder.RegisterType<StartupManager>()
                 .As<IStartupManager>();
 
-            builder.RegisterAssetsClient(AssetServiceSettings.Create(
-                new Uri(_settings.CurrentValue.AssetsServiceClient.ServiceUrl), TimeSpan.FromMinutes(3)));
+            builder.RegisterType<FakeAssetClient>()
+                .As<IAssetsServiceWithCache>()
+                .SingleInstance();
         }
     }
 }

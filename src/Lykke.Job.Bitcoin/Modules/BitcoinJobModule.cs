@@ -5,6 +5,7 @@ using Lykke.Job.Bitcoin.Settings;
 using Lykke.JobTriggers.Extenstions;
 using Lykke.Service.Assets.Client;
 using Lykke.Service.Bitcoin.Api.Core.Services;
+using Lykke.Service.Bitcoin.Api.Services;
 using Lykke.Service.Bitcoin.Api.Services.Health;
 using Lykke.SettingsReader;
 
@@ -25,8 +26,9 @@ namespace Lykke.Job.Bitcoin.Modules
                 .As<IHealthService>()
                 .SingleInstance();
 
-            builder.RegisterAssetsClient(AssetServiceSettings.Create(
-                new Uri(_settings.CurrentValue.AssetsServiceClient.ServiceUrl), TimeSpan.FromMinutes(3)));
+            builder.RegisterType<FakeAssetClient>()
+                .As<IAssetsServiceWithCache>()
+                .SingleInstance();
             builder.AddTriggers();
 
             builder.RegisterType<UpdateBalanceFunctions>().SingleInstance();
