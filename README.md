@@ -1,2 +1,2 @@
 # Lykke.Service.Bitcoin.Api
-Bitcoin integration for BIL
+Bitcoin integration for BIL.
